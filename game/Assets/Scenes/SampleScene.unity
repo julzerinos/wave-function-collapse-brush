@@ -152,6 +152,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 41d2ab4acaa5482f9fb478819eb49e0f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  tileSetName: KenneyTileSet1
+  options:
+    gridSize: 25
+    seed: 20
+    tileOffset: 1
 --- !u!4 &198445468
 Transform:
   m_ObjectHideFlags: 0

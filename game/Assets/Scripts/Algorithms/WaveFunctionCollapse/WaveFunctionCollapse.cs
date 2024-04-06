@@ -1,46 +1,44 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
+using Random = System.Random;
 
 namespace Algorithms.WaveFunctionCollapse
 {
-    public class WaveFunctionCollapseOptions
-    {
-        // TODO [#1] Implement optional options for the algorithm
-
-        public int GridSize = 25;
-        public int Seed = 25;
-    }
-
     public static class WaveFunctionCollapse
     {
         private static Random _random;
 
         public static WaveFunctionResult Execute(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
-            _random = new Random(options.Seed);
+            _random = new Random(options.seed);
 
-            var waveGrid = InitializeWaveGrid(options.GridSize, input.TileCount);
+            var waveGrid = InitializeWaveGrid(options.gridSize, input.TileCount);
 
-            var startCollapseRow = _random.Next(0, options.GridSize);
-            var startCollapseCol = _random.Next(0, options.GridSize);
-            var collapsePosition = (startCollapseCol, startCollapseRow);
+            var startCollapseRow = _random.Next(0, options.gridSize);
+            var startCollapseCol = _random.Next(0, options.gridSize);
+            var collapsePosition = (collapseCol: startCollapseCol, collapseRow: startCollapseRow);
 
-            while (true)
+            var iterations = 0;
+
+            do
             {
-                Collapse(waveGrid[startCollapseCol, startCollapseRow]);
+                Collapse(waveGrid[collapsePosition.collapseCol, collapsePosition.collapseRow]);
                 Propagate(waveGrid, input.ConnectionLookup, collapsePosition);
-                if (!Observe(waveGrid, out collapsePosition))
-                    break;
-            }
+
+                if (iterations++ <= 1000) continue;
+
+                Debug.LogWarning($"[WaveFunctionCollapse] WFC loop iterated the maximum number of iterations.");
+                break;
+            } while (Observe(waveGrid, out collapsePosition));
 
             var tileGrid = new string[25, 25];
 
-            for (int col = 0; col < tileGrid.GetLength(0); col++)
-            for (int row = 0; row < tileGrid.GetLength(1); row++)
+            for (var col = 0; col < tileGrid.GetLength(0); col++)
+            for (var row = 0; row < tileGrid.GetLength(1); row++)
             {
                 var cell = waveGrid[col, row];
-
                 tileGrid[col, row] = cell.Count == 1 ? input.Tiles[cell.ElementAt(0)] : "";
             }
 
@@ -59,8 +57,11 @@ namespace Algorithms.WaveFunctionCollapse
             cell.Add(tile);
         }
 
-        private static void Propagate(HashSet<int>[,] waveGrid,
-            Dictionary<int, Dictionary<int, HashSet<int>>> connectionLookup, (int, int) seedPosition)
+        private static void Propagate(
+            HashSet<int>[,] waveGrid,
+            IReadOnlyDictionary<int, Dictionary<int, HashSet<int>>> connectionLookup,
+            (int, int) seedPosition
+        )
         {
             var neighboringCells = new Stack<(int, int)>();
             neighboringCells.Push(seedPosition);
@@ -71,37 +72,41 @@ namespace Algorithms.WaveFunctionCollapse
                 var cell = waveGrid[col, row];
 
                 if (cell.Count == 0)
-                    throw new Exception(
-                        "[WaveFunctionCollapse > Propagate] Wave collapse encountered failed superposition");
+                {
+                    Debug.LogWarning(
+                        "[WaveFunctionCollapse > Propagate] Wave collapse encountered failed superposition (skipping)."
+                    );
+                    continue;
+                }
 
                 // TODO [#3] Replace with graph structure
                 var neighbors = new[]
                 {
-                    ((1, 0), 3),
-                    ((-1, 0), 0),
-                    ((0, 1), 1),
-                    ((0, -1), 2),
+                    ((col: 1, row: 0), 1),
+                    ((col: -1, row: 0), 3),
+                    ((col: 0, row: 1), 0),
+                    ((col: 0, row: -1), 2),
                 };
 
                 foreach (var (neighborDirection, directionName) in neighbors)
                 {
-                    var neighborPosition = (col + neighborDirection.Item1, row + neighborDirection.Item2);
-                    if (neighborPosition.Item1 is > 25 or < 0 || neighborPosition.Item2 is > 25 or < 0)
+                    var neighborPosition = (col: col + neighborDirection.col, row: row + neighborDirection.row);
+                    if (neighborPosition.col is >= 25 or < 0 || neighborPosition.row is >= 25 or < 0)
                         continue;
 
-                    var neighborCell = waveGrid[neighborPosition.Item1, neighborPosition.Item2];
+                    var neighborCell = waveGrid[neighborPosition.col, neighborPosition.row];
                     var neighborTileOptions = new HashSet<int>();
 
-                    foreach (var tile in neighborCell)
+                    foreach (var tile in cell)
                         neighborTileOptions.UnionWith(connectionLookup[tile][directionName]);
 
-                    var newSuperposition = new HashSet<int>(cell);
+                    var newSuperposition = new HashSet<int>(neighborCell);
                     newSuperposition.IntersectWith(neighborTileOptions);
 
-                    if (cell.SetEquals(newSuperposition))
+                    if (neighborCell.SetEquals(newSuperposition))
                         continue;
 
-                    cell = newSuperposition;
+                    waveGrid[neighborPosition.col, neighborPosition.row] = newSuperposition;
                     neighboringCells.Push(neighborPosition);
                 }
             }
@@ -118,7 +123,7 @@ namespace Algorithms.WaveFunctionCollapse
             {
                 var cell = waveGrid[col, row];
 
-                if (cell.Count >= minimumEntropy)
+                if (cell.Count >= minimumEntropy || cell.Count <= 1)
                     continue;
 
                 positionForMinEntropy = (col, row);
@@ -130,7 +135,7 @@ namespace Algorithms.WaveFunctionCollapse
                 positionForMinEntropy = (col, row);
             }
 
-            return minimumEntropy > 1;
+            return minimumEntropy < int.MaxValue;
         }
 
         private static HashSet<int>[,] InitializeWaveGrid(int gridSize, int tileCount)
@@ -145,7 +150,16 @@ namespace Algorithms.WaveFunctionCollapse
         // TODO [#2] Add tile probability distribution
         private static int PickTile(ICollection<int> cell)
         {
-            return cell.ElementAt(_random.Next(cell.Count));
+            if (cell.Count == 1) return cell.ElementAt(0);
+
+            var rand = _random.NextDouble();
+            var prob = new[] { .7, .75, .8, .85, .9, .95, 1.0 };
+
+            for (var i = 0; i < 7; i++)
+                if (cell.Contains(i) && rand <= prob[i])
+                    return i;
+
+            return cell.ElementAt(0);
         }
     }
 }

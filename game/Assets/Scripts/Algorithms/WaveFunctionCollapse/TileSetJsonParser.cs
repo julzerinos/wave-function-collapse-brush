@@ -1,8 +1,5 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using UnityEngine;
 
 namespace Algorithms.WaveFunctionCollapse
@@ -26,9 +23,12 @@ namespace Algorithms.WaveFunctionCollapse
         public string[] Tiles { get; }
         public Dictionary<int, Dictionary<int, HashSet<int>>> ConnectionLookup { get; }
 
-        public WaveFunctionInputFromJson(string lookupJsonPath)
+        public WaveFunctionInputFromJson(string configurationJsonPath)
         {
-            var textAsset = Resources.Load<TextAsset>(lookupJsonPath);
+            var textAsset = Resources.Load<TextAsset>(configurationJsonPath) ??
+                            throw new Exception(
+                                $"[WaveFunctionInputFromJson] Could not find configuration file under path '{configurationJsonPath}'.");
+
             var tileSetJson = JsonUtility.FromJson<TileSetJson>(textAsset.text);
 
             TileCount = tileSetJson.tiles.Length;
