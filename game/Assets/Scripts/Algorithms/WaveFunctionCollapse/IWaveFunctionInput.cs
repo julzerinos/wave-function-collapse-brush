@@ -6,7 +6,7 @@ namespace Algorithms.WaveFunctionCollapse
     {
         public int TileCount { get; }
         public string[] Tiles { get; }
-        public Dictionary<int, Dictionary<Direction, int>> ConnectionLookup { get; }
+        public Dictionary<int, Dictionary<int, HashSet<int>>> ConnectionLookup { get; }
         
         
     }

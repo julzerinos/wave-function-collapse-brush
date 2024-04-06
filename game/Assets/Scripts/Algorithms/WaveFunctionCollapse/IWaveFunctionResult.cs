@@ -1,7 +1,7 @@
 namespace Algorithms.WaveFunctionCollapse
 {
-    public interface IWaveFunctionResult
+    public struct WaveFunctionResult
     {
-        
+        public string[,] TileGrid;
     }
 }

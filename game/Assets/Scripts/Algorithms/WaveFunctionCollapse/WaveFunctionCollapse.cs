@@ -8,23 +8,15 @@ namespace Algorithms.WaveFunctionCollapse
     {
         // TODO [#1] Implement optional options for the algorithm
 
-        public readonly int GridSize = 25;
-        public readonly int Seed = 25;
-    }
-
-    public enum Direction
-    {
-        North,
-        East,
-        South,
-        West
+        public int GridSize = 25;
+        public int Seed = 25;
     }
 
     public static class WaveFunctionCollapse
     {
         private static Random _random;
 
-        public static IWaveFunctionResult Execute(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
+        public static WaveFunctionResult Execute(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             _random = new Random(options.Seed);
 
@@ -37,12 +29,22 @@ namespace Algorithms.WaveFunctionCollapse
             while (true)
             {
                 Collapse(waveGrid[startCollapseCol, startCollapseRow]);
-                Propagate(waveGrid, connectionLookup, collapsePosition);
+                Propagate(waveGrid, input.ConnectionLookup, collapsePosition);
                 if (!Observe(waveGrid, out collapsePosition))
                     break;
             }
-            
-            
+
+            var tileGrid = new string[25, 25];
+
+            for (int col = 0; col < tileGrid.GetLength(0); col++)
+            for (int row = 0; row < tileGrid.GetLength(1); row++)
+            {
+                var cell = waveGrid[col, row];
+
+                tileGrid[col, row] = cell.Count == 1 ? input.Tiles[cell.ElementAt(0)] : "";
+            }
+
+            return new WaveFunctionResult { TileGrid = tileGrid };
         }
 
         private static bool Observe(HashSet<int>[,] waveGrid, out (int, int) position)
@@ -58,7 +60,7 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         private static void Propagate(HashSet<int>[,] waveGrid,
-            Dictionary<int, Dictionary<Direction, HashSet<int>>> connectionLookup, (int, int) seedPosition)
+            Dictionary<int, Dictionary<int, HashSet<int>>> connectionLookup, (int, int) seedPosition)
         {
             var neighboringCells = new Stack<(int, int)>();
             neighboringCells.Push(seedPosition);
@@ -75,10 +77,10 @@ namespace Algorithms.WaveFunctionCollapse
                 // TODO [#3] Replace with graph structure
                 var neighbors = new[]
                 {
-                    ((1, 0), Direction.North),
-                    ((-1, 0), Direction.East),
-                    ((0, 1), Direction.South),
-                    ((0, -1), Direction.West),
+                    ((1, 0), 3),
+                    ((-1, 0), 0),
+                    ((0, 1), 1),
+                    ((0, -1), 2),
                 };
 
                 foreach (var (neighborDirection, directionName) in neighbors)
