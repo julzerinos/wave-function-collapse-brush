@@ -9,16 +9,18 @@ namespace Map
         [SerializeField] private string tileSetName;
         [SerializeField] private WaveFunctionCollapseOptions options;
 
+        private WaveFunctionCollapseComputer _computer;
+
         private void Awake()
         {
             var tileSetPath = $"Models/Tiles/{tileSetName}";
             var tileByNameLookup = Resources.LoadAll<GameObject>(tileSetPath).ToDictionary(tile => tile.name);
 
             var waveFunctionInputFromJson = new WaveFunctionInputFromJson($"{tileSetPath}/configuration");
-            var waveFunctionResult = WaveFunctionCollapse.Execute(
-                waveFunctionInputFromJson,
-                options
-            );
+            _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
+
+            _computer.CompleteGrid();
+            var waveFunctionResult = _computer.ParseResult();
 
             for (var col = 0; col < options.gridSize; col++)
             for (var row = 0; row < options.gridSize; row++)
