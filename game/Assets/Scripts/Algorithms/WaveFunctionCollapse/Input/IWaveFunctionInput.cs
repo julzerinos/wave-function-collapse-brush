@@ -1,13 +1,12 @@
 using System.Collections.Generic;
+using Algorithms.Tilesets;
 
-namespace Algorithms.WaveFunctionCollapse
+namespace Algorithms.WaveFunctionCollapse.Input
 {
     public interface IWaveFunctionInput
     {
         public int TileCount { get; }
         public string[] Tiles { get; }
-        public Dictionary<int, Dictionary<int, HashSet<int>>> ConnectionLookup { get; }
-        
-        
+        public TileData[] TileData { get; }
     }
 }
