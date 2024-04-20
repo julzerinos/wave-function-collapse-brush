@@ -3,27 +3,77 @@ using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.Input;
 using UnityEngine;
+using Utility.Graph;
 using Random = System.Random;
 
 namespace Algorithms.WaveFunctionCollapse
 {
     public static class WaveFunctionCollapse
     {
-        public static HashSet<int>[,] InitializeWaveGrid(int gridSize, int tileCount)
+        public static Graph<Cell> InitializeWaveGraph(int cardinality, int tileCount)
         {
-            var waveGrid = new HashSet<int>[gridSize, gridSize];
-            for (var i = 0; i < gridSize; i++)
-            for (var j = 0; j < gridSize; j++)
-                waveGrid[i, j] = new HashSet<int>(Enumerable.Range(0, tileCount));
-            return waveGrid;
+            var waveGraph = new Graph<Cell>(GetOppositeDirectionIndex);
+
+            var startCellNode = new Node<Cell>(cardinality, Cell.Factory((0, 0), tileCount));
+            RecursivelyAddNode(startCellNode);
+
+            return waveGraph;
+
+            void RecursivelyAddNode(Node<Cell> node)
+            {
+                waveGraph.AddNode(node);
+
+                for (var directionIndex = 0; directionIndex < cardinality; directionIndex++)
+                {
+                    if (!GetNeighborPosition(node.Content.Coordinates, directionIndex, out var neighborPosition))
+                        continue;
+
+                    var doesNodeExist = waveGraph.GetNode(neighborPosition.GetHashCode(), out var neighborNode);
+
+                    if (!doesNodeExist)
+                        neighborNode = new Node<Cell>(4, Cell.Factory(neighborPosition, tileCount));
+
+                    node.RegisterNeighbor(neighborNode, directionIndex);
+                    neighborNode.RegisterNeighbor(node, GetOppositeDirectionIndex(directionIndex));
+
+                    if (!doesNodeExist)
+                        RecursivelyAddNode(neighborNode);
+                }
+            }
+
+            // TODO from input
+            int GetOppositeDirectionIndex(int direction) => (direction + cardinality / 2) % cardinality;
+
+            // TODO from input
+            bool GetNeighborPosition(
+                (float x, float y) centerPosition,
+                int directionIndex,
+                out (float x, float y) neighborPosition
+            )
+            {
+                // TODO should come from input
+                var neighbors = new[]
+                {
+                    (x: 0f, y: 1f),
+                    (x: 1f, y: 0f),
+                    (x: 0f, y: -1f),
+                    (x: -1f, y: 0f)
+                };
+
+                neighborPosition = (float.MaxValue, float.MaxValue);
+
+                neighborPosition = (centerPosition.x + neighbors[directionIndex].x, centerPosition.y + neighbors[directionIndex].y);
+                // TODO change to actual constraint checks
+                return neighborPosition.x is < 25 and >= 0 && neighborPosition.y is < 25 and >= 0;
+            }
         }
 
-        private static bool Observe(HashSet<int>[,] waveGrid, out (int, int) position)
+        private static bool Observe(Graph<Cell> waveGraph, out Node<Cell> node)
         {
-            return FindLowestEntropyCellPosition(waveGrid, out position);
+            return FindLowestEntropyNode(waveGraph, out node);
         }
 
-        private static void Collapse(HashSet<int> cell, Random random)
+        private static void Collapse(Cell cell, Random random)
         {
             var tile = PickTile(cell, random);
             cell.Clear();
@@ -31,7 +81,7 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         public static bool MatchNeighbor(
-            HashSet<int> neighborCell,
+            Cell neighborCell,
             IEnumerable<HashSet<int>> possibleNeighborTiles,
             out HashSet<int> superposition
         )
@@ -49,20 +99,20 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         private static void Propagate(
-            HashSet<int>[,] waveGrid,
-            TileData[] tileData,
-            (int, int) seedPosition
+            Graph<Cell> waveGraph,
+            IReadOnlyList<TileData> tileData,
+            Node<Cell> seedNode
         )
         {
-            var neighboringCells = new Stack<(int, int)>();
-            neighboringCells.Push(seedPosition);
+            var neighboringNodes = new Stack<Node<Cell>>();
+            neighboringNodes.Push(seedNode);
 
-            while (neighboringCells.Count > 0)
+            while (neighboringNodes.Any())
             {
-                var (col, row) = neighboringCells.Pop();
-                var cell = waveGrid[col, row];
+                var node = neighboringNodes.Pop();
+                var cell = node.Content;
 
-                if (cell.Count == 0)
+                if (!cell.Any()) // TODO is the logic true
                 {
                     Debug.LogWarning(
                         "[WaveFunctionCollapse > Propagate] Wave collapse encountered failed superposition (skipping)."
@@ -70,141 +120,115 @@ namespace Algorithms.WaveFunctionCollapse
                     continue;
                 }
 
-                // TODO [#3] Replace with graph structure
-                var neighbors = new[]
+                foreach (var (neighborNode, direction) in node.Neighbors)
                 {
-                    ((col: 1, row: 0), 1),
-                    ((col: -1, row: 0), 3),
-                    ((col: 0, row: 1), 0),
-                    ((col: 0, row: -1), 2),
-                };
+                    var neighborCell = neighborNode.Content;
 
-                foreach (var (neighborDirection, directionName) in neighbors)
-                {
-                    var neighborPosition = (col: col + neighborDirection.col, row: row + neighborDirection.row);
-                    if (neighborPosition.col is >= 25 or < 0 || neighborPosition.row is >= 25 or < 0)
+                    var isSuperpositionNew = MatchNeighbor(
+                        neighborCell,
+                        cell.Select(t => tileData[t].ConnectionsPerDirection[direction]),
+                        out var superposition
+                    );
+
+                    if (!isSuperpositionNew)
                         continue;
 
-                    var neighborCell = waveGrid[neighborPosition.col, neighborPosition.row];
-
-                    if (!MatchNeighbor(
-                            neighborCell,
-                            cell.Select(t => tileData[t].ConnectionsPerDirection[directionName]),
-                            out var superposition)
-                       )
-                        continue;
-
-                    waveGrid[neighborPosition.col, neighborPosition.row] = superposition;
-                    neighboringCells.Push(neighborPosition);
+                    neighborNode.Content = new Cell(superposition, neighborCell.Coordinates);
+                    neighboringNodes.Push(neighborNode);
+                    // TODO do I need a set for tracking nodes I've been to?
                 }
             }
         }
 
-        private static bool FindLowestEntropyCellPosition(
-            HashSet<int>[,] waveGrid,
-            out (int, int) positionForMinEntropy
+        private static bool FindLowestEntropyNode(
+            Graph<Cell> waveGraph,
+            out Node<Cell> lowestEntropyNode
         )
         {
             var minimumEntropy = int.MaxValue;
-            positionForMinEntropy = (-1, -1);
+            lowestEntropyNode = null;
 
-            for (var col = 0; col < waveGrid.GetLength(0); col++)
-            for (var row = 0; row < waveGrid.GetLength(1); row++)
+            foreach (var node in waveGraph)
             {
-                var cell = waveGrid[col, row];
+                var cell = node.Content;
 
                 if (cell.Count >= minimumEntropy || cell.Count <= 1)
                     continue;
 
-                positionForMinEntropy = (col, row);
+                lowestEntropyNode = node;
+                minimumEntropy = cell.Count;
 
                 if (cell.Count == 2)
                     return true;
-
-                minimumEntropy = cell.Count;
-                positionForMinEntropy = (col, row);
             }
 
             return minimumEntropy < int.MaxValue;
         }
 
-        private static void AttemptFixInvalidCells(
-            HashSet<int>[,] waveGrid
-        )
-        {
-            for (var col = 0; col < waveGrid.GetLength(0); col++)
-            for (var row = 0; row < waveGrid.GetLength(1); row++)
-            {
-                var cell = waveGrid[col, row];
-
-                if (cell.Count >= 1) continue;
-            }
-        }
-
-        private static int PickTile(ICollection<int> cell, Random random)
+        private static int PickTile(Cell cell, Random random)
         {
             if (cell.Count == 1) return cell.ElementAt(0);
 
-            // TODO [#2] Add tile probability distribution
+            // TODO add tile probability distribution
             var randIndex = random.Next(0, cell.Count);
             return cell.ElementAt(randIndex);
         }
 
-        public static IEnumerable<(TileData, (int col, int row))> Parse(
-            HashSet<int>[,] waveGrid, IWaveFunctionInput input, WaveFunctionCollapseOptions options
+        public static IEnumerable<(TileData, (float x, float y))> Parse(
+            Graph<Cell> waveGrid,
+            IWaveFunctionInput input
         )
         {
-            for (var col = 0; col < options.gridSize; col++)
-            for (var row = 0; row < options.gridSize; row++)
+            foreach (var node in waveGrid)
             {
-                var cell = waveGrid[col, row];
+                var cell = node.Content;
                 var tile = cell.Count == 1 ? input.TileData[cell.ElementAt(0)] : null;
 
-                yield return (tile, (col, row));
+                yield return (tile, cell.Coordinates);
             }
         }
 
         public static void Execute(
-            ref HashSet<int>[,] waveGrid,
+            Graph<Cell> waveGraph,
             Random random,
             IWaveFunctionInput input,
-            (int col, int row) collapsePosition
+            Node<Cell> collapseNode
         )
         {
             var iterations = 0;
 
             do
             {
-                Collapse(waveGrid[collapsePosition.col, collapsePosition.row], random);
-                Propagate(waveGrid, input.TileData, collapsePosition);
+                Collapse(collapseNode.Content, random);
+                Propagate(waveGraph, input.TileData, collapseNode);
 
                 if (iterations++ <= 1000) continue;
 
                 Debug.LogWarning($"[WaveFunctionCollapse] WFC loop iterated the maximum number of iterations.");
                 break;
-            } while (Observe(waveGrid, out collapsePosition));
+            } while (Observe(waveGraph, out collapseNode));
         }
 
         public static void Execute(
-            ref HashSet<int>[,] waveGrid, Random random, IWaveFunctionInput input, WaveFunctionCollapseOptions options
+            Graph<Cell> waveGraph,
+            Random random,
+            IWaveFunctionInput input
         )
         {
-            var startCollapseRow = random.Next(0, options.gridSize);
-            var startCollapseCol = random.Next(0, options.gridSize);
-            var collapsePosition = (collapseCol: startCollapseCol, collapseRow: startCollapseRow);
-
-            Execute(ref waveGrid, random, input, collapsePosition);
+            var startCollapseNode = waveGraph.GetRandomNode();
+            Execute(waveGraph, random, input, startCollapseNode);
         }
 
-        public static IEnumerable<(TileData, (int col, int row))> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
+        public static IEnumerable<(TileData, (float x, float y))> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             var random = new Random(options.Seed);
 
-            var waveGrid = InitializeWaveGrid(options.gridSize, input.TileCount);
+            // TODO update cardinality from input
+            var waveGraph = InitializeWaveGraph(4, input.TileCount);
 
-            Execute(ref waveGrid, random, input, options);
+            Execute(waveGraph, random, input);
 
-            return Parse(waveGrid, input, options);
+            return Parse(waveGraph, input);
         }
     }
 }

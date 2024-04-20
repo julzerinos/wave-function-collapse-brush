@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Algorithms.Tilesets;
 
 namespace Algorithms.WaveFunctionCollapse.Input

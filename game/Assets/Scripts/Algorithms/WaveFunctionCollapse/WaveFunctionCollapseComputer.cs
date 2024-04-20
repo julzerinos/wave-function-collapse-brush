@@ -3,6 +3,7 @@ using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.Input;
 using UnityEngine;
+using Utility.Graph;
 using Random = System.Random;
 
 namespace Algorithms.WaveFunctionCollapse
@@ -12,7 +13,7 @@ namespace Algorithms.WaveFunctionCollapse
         private readonly IWaveFunctionInput _input;
         private readonly WaveFunctionCollapseOptions _options;
         private Random _random;
-        private HashSet<int>[,] _waveGrid;
+        private Graph<Cell> _waveGraph;
 
 
         public WaveFunctionCollapseComputer(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
@@ -20,55 +21,49 @@ namespace Algorithms.WaveFunctionCollapse
             _input = input;
             _options = options;
             _random = new Random(_options.Seed);
-            _waveGrid = WaveFunctionCollapse.InitializeWaveGrid(options.gridSize, input.TileCount);
+            // TODO update cardinality
+            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(4, input.TileCount);
         }
 
         public void CompleteGrid()
         {
-            WaveFunctionCollapse.Execute(ref _waveGrid, _random, _input, _options);
+            WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
         }
 
-        public void UnCollapseCells((int col, int row) colRowPosition, int maxCells)
+        public void UnCollapseCells((float x, float y) patchCenter, int maxCells)
         {
-            var neighboringCells = new Queue<(int col, int row)>();
-            neighboringCells.Enqueue(colRowPosition);
+            if (!_waveGraph.GetNode(patchCenter.GetHashCode(), out var startNode))
+            {
+                Debug.LogError($"[WFCComputer > UnCollapseCells] Could not find node for position {patchCenter}.");
+                return;
+            }
 
-            var positionsToFix = new Stack<(int col, int row)>();
-            var explored = new HashSet<(int col, int row)>();
+            var neighboringNodes = new Queue<Node<Cell>>();
+            neighboringNodes.Enqueue(startNode);
+
+            var nodesToFix = new Stack<Node<Cell>>();
+            var nodesExplored = new HashSet<Node<Cell>>();
 
             var cellsReCollapsed = 0;
 
-            while (neighboringCells.Count > 0 && cellsReCollapsed < maxCells)
+            while (neighboringNodes.Count > 0 && cellsReCollapsed < maxCells)
             {
-                var (col, row) = neighboringCells.Dequeue();
+                var node = neighboringNodes.Dequeue();
 
-                positionsToFix.Push((col, row));
-                explored.Add((col, row));
-                _waveGrid[col, row] = new HashSet<int>(Enumerable.Range(0, _input.TileCount));
+                nodesToFix.Push(node);
+                nodesExplored.Add(node);
+                node.Content = new Cell(Enumerable.Range(0, _input.TileCount), node.Content.Coordinates);
                 cellsReCollapsed++;
 
-                var neighbors = new[]
-                {
-                    ((col: 1, row: 0), 1),
-                    ((col: -1, row: 0), 3),
-                    ((col: 0, row: 1), 0),
-                    ((col: 0, row: -1), 2),
-                };
-
-                foreach (var (neighborDirection, directionName) in neighbors)
-                {
-                    var neighborPosition = (col: col + neighborDirection.col, row: row + neighborDirection.row);
-                    if (explored.Contains(neighborPosition) || neighborPosition.col is >= 25 or < 0 || neighborPosition.row is >= 25 or < 0)
-                        continue;
-
-                    neighboringCells.Enqueue(neighborPosition);
-                }
+                foreach (var (neighbor, _) in node.Neighbors)
+                    if (!nodesExplored.Contains(neighbor)) // TODO required?
+                        neighboringNodes.Enqueue(neighbor);
             }
 
-            while (positionsToFix.Count > 0)
+            while (nodesToFix.Count > 0)
             {
-                var (col, row) = positionsToFix.Pop();
-                var cell = _waveGrid[col, row];
+                var node = nodesToFix.Pop();
+                var cell = node.Content;
 
                 if (cell.Count == 0)
                 {
@@ -78,66 +73,30 @@ namespace Algorithms.WaveFunctionCollapse
                     continue;
                 }
 
-                // TODO [#3] Replace with graph structure
-                var neighbors = new[]
+                foreach (var (neighborNode, direction) in node.Neighbors)
                 {
-                    ((col: 1, row: 0), 1),
-                    ((col: -1, row: 0), 3),
-                    ((col: 0, row: 1), 0),
-                    ((col: 0, row: -1), 2),
-                };
-
-                foreach (var (neighborDirection, directionName) in neighbors)
-                {
-                    var neighborPosition = (col: col + neighborDirection.col, row: row + neighborDirection.row);
-                    if (neighborPosition.col is >= 25 or < 0 || neighborPosition.row is >= 25 or < 0)
-                        continue;
-
-                    var neighborCell = _waveGrid[neighborPosition.col, neighborPosition.row];
-
                     var constrainedCell = new HashSet<int>();
-                    var oppositeDirection = (directionName + neighbors.Length / 2) % neighbors.Length;
+                    var oppositeDirection = _waveGraph.GetOppositeDirection(direction);
 
-                    if (!explored.Contains(neighborDirection))
-                        foreach (var neighborTile in neighborCell)
+                    if (!nodesExplored.Contains(neighborNode))
+                        foreach (var neighborTile in neighborNode.Content)
                             constrainedCell.UnionWith(_input.TileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
 
                     cell.IntersectWith(constrainedCell);
                 }
-
-
-                // foreach (var (neighborDirection, directionName) in neighbors)
-                // {
-                //     var neighborPosition = (col: col + neighborDirection.col, row: row + neighborDirection.row);
-                //     if (neighborPosition.col is >= 25 or < 0 || neighborPosition.row is >= 25 or < 0)
-                //         continue;
-                //
-                //     if (!explored.Contains(neighborDirection))
-                //         continue;
-                //
-                //     var neighborCell = _waveGrid[neighborPosition.col, neighborPosition.row];
-                //
-                //     if (!WaveFunctionCollapse.MatchNeighbor(
-                //             neighborCell,
-                //             cell.Select(t => _input.ConnectionLookup[t][directionName]),
-                //             out var superposition)
-                //        )
-                //         continue;
-                //
-                //     _waveGrid[neighborPosition.col, neighborPosition.row] = superposition;
-                // }
             }
         }
 
         public void Clear()
         {
-            _waveGrid = WaveFunctionCollapse.InitializeWaveGrid(_options.gridSize, _input.TileCount);
+            // TODO update cardinality
+            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(4, _input.TileCount);
             _random = new Random(_options.Seed);
         }
 
-        public IEnumerable<(TileData, (int col, int row))> ParseResult()
+        public IEnumerable<(TileData, (float x, float y))> ParseResult()
         {
-            return WaveFunctionCollapse.Parse(_waveGrid, _input, _options);
+            return WaveFunctionCollapse.Parse(_waveGraph, _input);
         }
     }
 }
