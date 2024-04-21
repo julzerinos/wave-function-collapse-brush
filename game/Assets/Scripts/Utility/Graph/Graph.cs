@@ -6,12 +6,12 @@ using UnityEngine;
 
 namespace Utility.Graph
 {
-    public class Graph<T> : IEnumerable<Node<T>> where T : INodeContent
+    public class Graph<T> : IEnumerable<Node<T>> where T : INodeCoordinates
     {
         public Func<int, int> GetOppositeDirection { get; }
 
         private readonly HashSet<Node<T>> _nodes = new();
-        private readonly Dictionary<int, Node<T>> _nodeByContentLookup = new();
+        private readonly Dictionary<INodeCoordinates, Node<T>> _nodeByCoordinatesLookup = new();
 
         private int _nodeCardinality;
 
@@ -23,32 +23,12 @@ namespace Utility.Graph
         public void AddNode(Node<T> node)
         {
             _nodes.Add(node);
-            _nodeByContentLookup.Add(node.Content.GetContentHash(), node);
+            _nodeByCoordinatesLookup.Add(node.Coordinates, node);
         }
 
-        public bool Contains(Node<T> node)
+        public bool GetNode(INodeCoordinates coordinates, out Node<T> node)
         {
-            return _nodes.Contains(node);
-        }
-
-        public bool Contains(T content)
-        {
-            return _nodeByContentLookup.ContainsKey(content.GetContentHash());
-        }
-
-        public bool Contains(int contentHash)
-        {
-            return _nodeByContentLookup.ContainsKey(contentHash);
-        }
-
-        public bool GetNode(T content, out Node<T> node)
-        {
-            return _nodeByContentLookup.TryGetValue(content.GetContentHash(), out node);
-        }
-
-        public bool GetNode(int contentHash, out Node<T> node)
-        {
-            return _nodeByContentLookup.TryGetValue(contentHash, out node);
+            return _nodeByCoordinatesLookup.TryGetValue(coordinates, out node);
         }
 
         public Node<T> GetRandomNode()

@@ -4,7 +4,7 @@ using JetBrains.Annotations;
 
 namespace Utility.Graph
 {
-    public class Node<T> where T : INodeContent
+    public class Node<T>
     {
         [ItemCanBeNull] private readonly Node<T>[] _neighbors;
 
@@ -14,11 +14,13 @@ namespace Utility.Graph
                 .Where(neighborDirection => neighborDirection.neighbor != null);
 
         public T Content { get; set; }
+        public INodeCoordinates Coordinates { get; set; }
 
-        public Node(int cardinality, T content)
+        public Node(int cardinality, T content, INodeCoordinates coordinates)
         {
             _neighbors = new Node<T>[cardinality];
             Content = content;
+            Coordinates = coordinates;
         }
 
         public void RegisterNeighbor(Node<T> neighbor, int directionIndex)

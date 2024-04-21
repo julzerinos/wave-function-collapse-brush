@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.Input;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 using Utility.Graph;
 using Random = System.Random;
@@ -15,13 +16,12 @@ namespace Algorithms.WaveFunctionCollapse
         private Random _random;
         private Graph<Cell> _waveGraph;
 
-
+        // TODO update cardinality
         public WaveFunctionCollapseComputer(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             _input = input;
             _options = options;
             _random = new Random(_options.Seed);
-            // TODO update cardinality
             _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(input, options);
         }
 
@@ -30,9 +30,9 @@ namespace Algorithms.WaveFunctionCollapse
             WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
         }
 
-        public void UnCollapseCells((float x, float y) patchCenter, int maxCells)
+        public void UnCollapseCells(CellCoordinates patchCenter, int maxCells)
         {
-            if (!_waveGraph.GetNode(patchCenter.GetHashCode(), out var startNode))
+            if (!_waveGraph.GetNode(patchCenter, out var startNode))
             {
                 Debug.LogError($"[WFCComputer > UnCollapseCells] Could not find node for position {patchCenter}.");
                 return;
@@ -52,7 +52,7 @@ namespace Algorithms.WaveFunctionCollapse
 
                 nodesToFix.Push(node);
                 nodesExplored.Add(node);
-                node.Content = new Cell(Enumerable.Range(0, _input.TileCount), node.Content.Coordinates);
+                node.Content = Cell.Factory(_input.TileCount);
                 cellsReCollapsed++;
 
                 foreach (var (neighbor, _) in node.Neighbors)
@@ -94,7 +94,7 @@ namespace Algorithms.WaveFunctionCollapse
             _random = new Random(_options.Seed);
         }
 
-        public IEnumerable<(TileData, (float x, float y))> ParseResult()
+        public IEnumerable<(TileData, CellCoordinates)> ParseResult()
         {
             return WaveFunctionCollapse.Parse(_waveGraph, _input);
         }

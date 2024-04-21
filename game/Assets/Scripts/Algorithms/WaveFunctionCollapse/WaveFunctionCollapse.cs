@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.Input;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 using Utility.Graph;
 using Random = System.Random;
@@ -14,12 +15,12 @@ namespace Algorithms.WaveFunctionCollapse
         {
             var waveGraph = new Graph<Cell>(GetOppositeDirectionIndex);
 
-            var startCellNode = new Node<Cell>(input.Cardinality, Cell.Factory((0, 0), input.TileCount));
+            var startPosition = new CellCoordinates { X = 0, Y = 0 };
+            var startCellNode = new Node<Cell>(input.Cardinality, Cell.Factory(input.TileCount), startPosition);
 
-            var positionFrontier = new HashSet<(float x, float y)> { startCellNode.Content.Coordinates };
+            var positionFrontier = new HashSet<CellCoordinates> { startPosition };
             var nodesQueue = new Queue<Node<Cell>>();
             nodesQueue.Enqueue(startCellNode);
-
 
             while (nodesQueue.Count > 0)
             {
@@ -28,13 +29,13 @@ namespace Algorithms.WaveFunctionCollapse
 
                 for (var directionIndex = 0; directionIndex < input.Cardinality; directionIndex++)
                 {
-                    if (!GetNeighborPosition(node.Content.Coordinates, directionIndex, out var neighborPosition))
+                    // TODO figure out typing
+                    if (!GetNeighborPosition((CellCoordinates)node.Coordinates, directionIndex, out var neighborPosition))
                         continue;
 
-
-                    var isNodeInGraph = waveGraph.GetNode(neighborPosition.GetHashCode(), out var neighborNode);
+                    var isNodeInGraph = waveGraph.GetNode(neighborPosition, out var neighborNode);
                     if (!isNodeInGraph)
-                        neighborNode = new Node<Cell>(4, Cell.Factory(neighborPosition, input.TileCount));
+                        neighborNode = new Node<Cell>(4, Cell.Factory(input.TileCount), neighborPosition);
 
                     node.RegisterNeighbor(neighborNode, directionIndex);
                     neighborNode.RegisterNeighbor(node, GetOppositeDirectionIndex(directionIndex));
@@ -53,26 +54,26 @@ namespace Algorithms.WaveFunctionCollapse
 
             // TODO from input
             bool GetNeighborPosition(
-                (float x, float y) centerPosition,
+                CellCoordinates centerPosition,
                 int directionIndex,
-                out (float x, float y) neighborPosition
+                out CellCoordinates neighborPosition
             )
             {
                 // TODO should come from input
                 var neighbors = new[]
                 {
-                    (x: 0f, y: 1f),
-                    (x: 1f, y: 0f),
-                    (x: 0f, y: -1f),
-                    (x: -1f, y: 0f)
+                    new CellCoordinates(0f, 1f),
+                    new CellCoordinates(1f, 0f),
+                    new CellCoordinates(0f, -1f),
+                    new CellCoordinates(-1f, 0f)
                 };
 
-                neighborPosition = (float.MaxValue, float.MaxValue);
+                neighborPosition = new CellCoordinates(float.MaxValue, float.MaxValue);
 
-                neighborPosition = (centerPosition.x + neighbors[directionIndex].x, centerPosition.y + neighbors[directionIndex].y);
-                return neighborPosition.x < options.gridSize &&
-                       neighborPosition.y < options.gridSize &&
-                       neighborPosition is { x: >= 0, y: >= 0 };
+                neighborPosition = centerPosition + neighbors[directionIndex];
+                return neighborPosition.X < options.gridSize &&
+                       neighborPosition.Y < options.gridSize &&
+                       neighborPosition is { X: >= 0, Y: >= 0 };
             }
         }
 
@@ -120,7 +121,7 @@ namespace Algorithms.WaveFunctionCollapse
                 var node = neighboringNodes.Pop();
                 var cell = node.Content;
 
-                if (!cell.Any()) // TODO is the logic true
+                if (!cell.Any())
                 {
                     Debug.LogWarning(
                         "[WaveFunctionCollapse > Propagate] Wave collapse encountered failed superposition (skipping)."
@@ -141,7 +142,7 @@ namespace Algorithms.WaveFunctionCollapse
                     if (!isSuperpositionNew)
                         continue;
 
-                    neighborNode.Content = new Cell(superposition, neighborCell.Coordinates);
+                    neighborNode.Content = new Cell(superposition);
                     neighboringNodes.Push(neighborNode);
                     // TODO do I need a set for tracking nodes I've been to?
                 }
@@ -182,7 +183,7 @@ namespace Algorithms.WaveFunctionCollapse
             return cell.ElementAt(randIndex);
         }
 
-        public static IEnumerable<(TileData, (float x, float y))> Parse(
+        public static IEnumerable<(TileData, CellCoordinates)> Parse(
             Graph<Cell> waveGrid,
             IWaveFunctionInput input
         )
@@ -192,7 +193,7 @@ namespace Algorithms.WaveFunctionCollapse
                 var cell = node.Content;
                 var tile = cell.Count == 1 ? input.TileData[cell.ElementAt(0)] : null;
 
-                yield return (tile, cell.Coordinates);
+                yield return (tile, (CellCoordinates)node.Coordinates);
             }
         }
 
@@ -227,7 +228,7 @@ namespace Algorithms.WaveFunctionCollapse
             Execute(waveGraph, random, input, startCollapseNode);
         }
 
-        public static IEnumerable<(TileData, (float x, float y))> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
+        public static IEnumerable<(TileData, CellCoordinates)> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             var random = new Random(options.Seed);
 

@@ -1,6 +1,7 @@
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse;
 using Algorithms.WaveFunctionCollapse.Input;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 
 
@@ -31,7 +32,7 @@ namespace Map
 
         public void RegeneratePatch()
         {
-            _computer.UnCollapseCells((patchCenter.x, patchCenter.y), patchCellCount);
+            _computer.UnCollapseCells(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
             _computer.CompleteGrid();
 
             BuildMap();
@@ -49,11 +50,11 @@ namespace Map
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 
-            foreach (var (tileData, (col, row)) in _computer.ParseResult())
+            foreach (var (tileData, cellCoordinates) in _computer.ParseResult())
             {
                 if (tileData == null)
                 {
-                    Debug.LogWarning($"[MapGenerator] No tile found for col-row position {(col, row)} (skipping).");
+                    Debug.LogWarning($"[MapGenerator] No tile found for col-row position {cellCoordinates} (skipping).");
                     continue;
                 }
 
@@ -64,7 +65,7 @@ namespace Map
                     continue;
                 }
 
-                var position = new Vector3(col, 0, row) * options.tileOffset;
+                var position = new Vector3(cellCoordinates.X, 0, cellCoordinates.Y) * options.tileOffset;
 
                 var tileGameObject = Instantiate(_tilePrefabs[tileData.OriginalIndex], transform, true);
                 tileGameObject.name = $"{tileGameObject.name.Replace("(Clone)", "")}.{tileData.Transformation} {position}";
