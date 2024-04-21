@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Algorithms.Tilesets;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 using Utility.Serialize;
 
@@ -19,8 +20,19 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
 
+        // TODO never read from config json
         public int Cardinality { get; } = 4;
-        // public Dictionary<int, Dictionary<int, HashSet<int>>> ConnectionLookup { get; }
+
+        // TODO always assumes square tilesets
+        public CellCoordinates[] NeighborOffsets { get; } = new[]
+        {
+            new CellCoordinates(0f, 1f),
+            new CellCoordinates(1f, 0f),
+            new CellCoordinates(0f, -1f),
+            new CellCoordinates(-1f, 0f)
+        };
+
+        public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
 
         public WaveFunctionInputFromConnectionsJson(string configurationJsonPath)
         {

@@ -3,6 +3,7 @@ using Algorithms.WaveFunctionCollapse;
 using Algorithms.WaveFunctionCollapse.Input;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
+using Utility;
 
 
 namespace Map
@@ -47,6 +48,8 @@ namespace Map
 
         private void BuildMap()
         {
+            // TODO implement delta tiles replacement (instead of redoing the entire map)
+            
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 

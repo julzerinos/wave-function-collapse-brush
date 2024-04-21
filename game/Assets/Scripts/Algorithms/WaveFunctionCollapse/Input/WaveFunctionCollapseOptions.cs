@@ -2,7 +2,7 @@ using System;
 using UnityEngine;
 using Random = UnityEngine.Random;
 
-namespace Algorithms.WaveFunctionCollapse
+namespace Algorithms.WaveFunctionCollapse.Input
 {
     [Serializable]
     public class WaveFunctionCollapseOptions

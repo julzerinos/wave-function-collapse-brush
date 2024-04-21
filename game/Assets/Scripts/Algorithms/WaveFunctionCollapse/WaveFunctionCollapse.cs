@@ -13,7 +13,7 @@ namespace Algorithms.WaveFunctionCollapse
     {
         public static Graph<Cell, CellCoordinates> InitializeWaveGraph(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
-            var waveGraph = new Graph<Cell, CellCoordinates>(GetOppositeDirectionIndex);
+            var waveGraph = new Graph<Cell, CellCoordinates>(input.GetOppositeDirectionIndex);
 
             var startPosition = new CellCoordinates { X = 0, Y = 0 };
             var startCellNode = new Node<Cell, CellCoordinates>(input.Cardinality, Cell.Factory(input.TileCount), startPosition);
@@ -37,7 +37,7 @@ namespace Algorithms.WaveFunctionCollapse
                         neighborNode = new Node<Cell, CellCoordinates>(4, Cell.Factory(input.TileCount), neighborPosition);
 
                     node.RegisterNeighbor(neighborNode, directionIndex);
-                    neighborNode.RegisterNeighbor(node, GetOppositeDirectionIndex(directionIndex));
+                    neighborNode.RegisterNeighbor(node, input.GetOppositeDirectionIndex(directionIndex));
 
                     if (isNodeInGraph || !positionFrontier.Add(neighborPosition))
                         continue;
@@ -47,29 +47,16 @@ namespace Algorithms.WaveFunctionCollapse
             }
 
             return waveGraph;
-
-            // TODO from input
-            int GetOppositeDirectionIndex(int direction) => (direction + input.Cardinality / 2) % input.Cardinality;
-
-            // TODO from input
+            
             bool GetNeighborPosition(
                 CellCoordinates centerPosition,
                 int directionIndex,
                 out CellCoordinates neighborPosition
             )
             {
-                // TODO should come from input
-                var neighbors = new[]
-                {
-                    new CellCoordinates(0f, 1f),
-                    new CellCoordinates(1f, 0f),
-                    new CellCoordinates(0f, -1f),
-                    new CellCoordinates(-1f, 0f)
-                };
-
                 neighborPosition = new CellCoordinates(float.MaxValue, float.MaxValue);
 
-                neighborPosition = centerPosition + neighbors[directionIndex];
+                neighborPosition = centerPosition + input.NeighborOffsets[directionIndex];
                 return neighborPosition.X < options.gridSize &&
                        neighborPosition.Y < options.gridSize &&
                        neighborPosition is { X: >= 0, Y: >= 0 };

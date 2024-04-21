@@ -1,4 +1,6 @@
+using System.Collections.Generic;
 using Algorithms.Tilesets;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 
 namespace Algorithms.WaveFunctionCollapse.Input
 {
@@ -9,5 +11,9 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public TileData[] TileData { get; }
 
         public int Cardinality { get; }
+
+        public CellCoordinates[] NeighborOffsets { get; }
+
+        public int GetOppositeDirectionIndex(int direction);
     }
 }

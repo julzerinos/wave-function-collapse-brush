@@ -45,6 +45,7 @@ namespace Algorithms.WaveFunctionCollapse
 
             startNode.Content = Cell.Factory(_input.TileCount);
             nodesToFix.Add(startNode);
+            nodesExplored.Add(startNode);
 
             var cellsReCollapsed = 0;
             while (neighboringNodes.Count > 0)
@@ -59,6 +60,7 @@ namespace Algorithms.WaveFunctionCollapse
 
                     neighbor.Content = Cell.Factory(_input.TileCount);
                     nodesToFix.Add(neighbor);
+                    nodesExplored.Add(neighbor);
 
                     if (++cellsReCollapsed > maxCells)
                     {
