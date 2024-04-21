@@ -154,10 +154,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: Knots
   options:
-    gridSize: 25
+    gridSize: 20
     tileOffset: 1
     seed: 20
-    useRandomSeed: 1
+    useRandomSeed: 0
   patchCenter: {x: 12, y: 12}
   patchCellCount: 65
   regenerateMap: 0
@@ -171,7 +171,7 @@ Transform:
   m_GameObject: {fileID: 198445466}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0.18593788, y: 0.17886448, z: -0.47918034}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -331,8 +331,8 @@ Camera:
   near clip plane: 0.3
   far clip plane: 1000
   field of view: 25
-  orthographic: 0
-  orthographic size: 5
+  orthographic: 1
+  orthographic size: 15.18
   m_Depth: -1
   m_CullingMask:
     serializedVersion: 2
@@ -356,13 +356,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 963194225}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 12.187501, y: 48.931988, z: 11.004234}
+  m_LocalRotation: {x: 0.5, y: 0.5, z: -0.5, w: 0.5}
+  m_LocalPosition: {x: 7.5, y: 10, z: 7.5}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 90, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 90, y: 90, z: 0}
 --- !u!1660057539 &9223372036854775807
 SceneRoots:
   m_ObjectHideFlags: 0

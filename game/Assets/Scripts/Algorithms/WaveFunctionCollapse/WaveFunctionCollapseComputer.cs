@@ -22,7 +22,7 @@ namespace Algorithms.WaveFunctionCollapse
             _options = options;
             _random = new Random(_options.Seed);
             // TODO update cardinality
-            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(4, input.TileCount);
+            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(input, options);
         }
 
         public void CompleteGrid()
@@ -90,7 +90,7 @@ namespace Algorithms.WaveFunctionCollapse
         public void Clear()
         {
             // TODO update cardinality
-            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(4, _input.TileCount);
+            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(_input, _options);
             _random = new Random(_options.Seed);
         }
 

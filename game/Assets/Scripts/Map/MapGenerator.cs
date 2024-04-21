@@ -67,7 +67,7 @@ namespace Map
                 var position = new Vector3(col, 0, row) * options.tileOffset;
 
                 var tileGameObject = Instantiate(_tilePrefabs[tileData.OriginalIndex], transform, true);
-                tileGameObject.name = $"{tileGameObject.name}.{tileData.Transformation} {position}";
+                tileGameObject.name = $"{tileGameObject.name.Replace("(Clone)", "")}.{tileData.Transformation} {position}";
                 tileGameObject.transform.position = position;
 
                 switch (tileData.Transformation)

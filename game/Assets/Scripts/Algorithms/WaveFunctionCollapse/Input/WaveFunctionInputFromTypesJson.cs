@@ -17,6 +17,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public int TileCount { get; }
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
+        public int Cardinality { get; } = 4; // TODO populate programatically
 
         public WaveFunctionInputFromTypesJson(string configurationJsonPath)
         {
@@ -37,7 +38,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
-            
+
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections);
             TileCount = TileData.Length;
         }

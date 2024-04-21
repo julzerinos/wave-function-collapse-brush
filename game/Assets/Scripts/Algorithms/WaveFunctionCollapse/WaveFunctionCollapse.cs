@@ -10,28 +10,49 @@ namespace Algorithms.WaveFunctionCollapse
 {
     public static class WaveFunctionCollapse
     {
-        public static Graph<Cell> InitializeWaveGraph(int cardinality, int tileCount)
+        public static Graph<Cell> InitializeWaveGraph(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             var waveGraph = new Graph<Cell>(GetOppositeDirectionIndex);
 
-            var startCellNode = new Node<Cell>(cardinality, Cell.Factory((0, 0), tileCount));
+            var startCellNode = new Node<Cell>(input.Cardinality, Cell.Factory((0, 0), input.TileCount));
+
+            // var nodesFrontier = new Queue<Cell>();
+            // var nodesKnown = new HashSet<Cell>();
+            //
+            // while (nodesFrontier.Count > 0)
+            // {
+            //     
+            // }
+            //
+            //
+            
             RecursivelyAddNode(startCellNode);
 
             return waveGraph;
 
+            // TODO go back to for loop
+            
             void RecursivelyAddNode(Node<Cell> node)
             {
+                Debug.Log("--------------------------");
+                Debug.Log($"Adding {node.Content.Coordinates}");
                 waveGraph.AddNode(node);
 
-                for (var directionIndex = 0; directionIndex < cardinality; directionIndex++)
+                for (var directionIndex = 0; directionIndex < input.Cardinality; directionIndex++)
                 {
+                    Debug.Log($"Checking neighbor direction {directionIndex}");
+                    
                     if (!GetNeighborPosition(node.Content.Coordinates, directionIndex, out var neighborPosition))
                         continue;
 
+                    Debug.Log($"Found neighbor position {neighborPosition} at index {directionIndex}");
+
                     var doesNodeExist = waveGraph.GetNode(neighborPosition.GetHashCode(), out var neighborNode);
 
+                    Debug.Log($"doesNodeExist {doesNodeExist}");
+                    
                     if (!doesNodeExist)
-                        neighborNode = new Node<Cell>(4, Cell.Factory(neighborPosition, tileCount));
+                        neighborNode = new Node<Cell>(4, Cell.Factory(neighborPosition, input.TileCount));
 
                     node.RegisterNeighbor(neighborNode, directionIndex);
                     neighborNode.RegisterNeighbor(node, GetOppositeDirectionIndex(directionIndex));
@@ -42,7 +63,7 @@ namespace Algorithms.WaveFunctionCollapse
             }
 
             // TODO from input
-            int GetOppositeDirectionIndex(int direction) => (direction + cardinality / 2) % cardinality;
+            int GetOppositeDirectionIndex(int direction) => (direction + input.Cardinality / 2) % input.Cardinality;
 
             // TODO from input
             bool GetNeighborPosition(
@@ -63,8 +84,9 @@ namespace Algorithms.WaveFunctionCollapse
                 neighborPosition = (float.MaxValue, float.MaxValue);
 
                 neighborPosition = (centerPosition.x + neighbors[directionIndex].x, centerPosition.y + neighbors[directionIndex].y);
-                // TODO change to actual constraint checks
-                return neighborPosition.x is < 25 and >= 0 && neighborPosition.y is < 25 and >= 0;
+                return neighborPosition.x < options.gridSize &&
+                       neighborPosition.y < options.gridSize &&
+                       neighborPosition is { x: >= 0, y: >= 0 };
             }
         }
 
@@ -224,7 +246,7 @@ namespace Algorithms.WaveFunctionCollapse
             var random = new Random(options.Seed);
 
             // TODO update cardinality from input
-            var waveGraph = InitializeWaveGraph(4, input.TileCount);
+            var waveGraph = InitializeWaveGraph(input, options);
 
             Execute(waveGraph, random, input);
 

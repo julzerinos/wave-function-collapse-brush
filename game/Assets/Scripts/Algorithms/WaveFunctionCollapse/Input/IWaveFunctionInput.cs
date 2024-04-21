@@ -7,5 +7,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public int TileCount { get; }
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
+
+        public int Cardinality { get; }
     }
 }

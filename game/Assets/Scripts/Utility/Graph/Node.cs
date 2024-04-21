@@ -8,8 +8,10 @@ namespace Utility.Graph
     {
         [ItemCanBeNull] private readonly Node<T>[] _neighbors;
 
-        public IEnumerable<(Node<T> neighbor, int direction)> Neighbors => _neighbors.Select((n, i) => (neighbor: n, direction: i))
-            .Where(neighborDirection => neighborDirection.neighbor != null);
+        public IEnumerable<(Node<T> neighbor, int direction)> Neighbors
+            => _neighbors
+                .Select((n, i) => (neighbor: n, direction: i))
+                .Where(neighborDirection => neighborDirection.neighbor != null);
 
         public T Content { get; set; }
 

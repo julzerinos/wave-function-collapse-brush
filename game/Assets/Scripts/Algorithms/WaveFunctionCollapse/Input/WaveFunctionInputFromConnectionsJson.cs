@@ -18,6 +18,8 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public int TileCount { get; }
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
+
+        public int Cardinality { get; } = 4;
         // public Dictionary<int, Dictionary<int, HashSet<int>>> ConnectionLookup { get; }
 
         public WaveFunctionInputFromConnectionsJson(string configurationJsonPath)
