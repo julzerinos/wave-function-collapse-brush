@@ -14,9 +14,8 @@ namespace Algorithms.WaveFunctionCollapse
         private readonly IWaveFunctionInput _input;
         private readonly WaveFunctionCollapseOptions _options;
         private Random _random;
-        private Graph<Cell> _waveGraph;
+        private Graph<Cell, CellCoordinates> _waveGraph;
 
-        // TODO update cardinality
         public WaveFunctionCollapseComputer(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             _input = input;
@@ -38,31 +37,47 @@ namespace Algorithms.WaveFunctionCollapse
                 return;
             }
 
-            var neighboringNodes = new Queue<Node<Cell>>();
+            var neighboringNodes = new Queue<Node<Cell, CellCoordinates>>();
             neighboringNodes.Enqueue(startNode);
 
-            var nodesToFix = new Stack<Node<Cell>>();
-            var nodesExplored = new HashSet<Node<Cell>>();
+            var nodesToFix = new HashSet<Node<Cell, CellCoordinates>>();
+            var nodesExplored = new HashSet<Node<Cell, CellCoordinates>>();
+
+            startNode.Content = Cell.Factory(_input.TileCount);
+            nodesToFix.Add(startNode);
 
             var cellsReCollapsed = 0;
-
-            while (neighboringNodes.Count > 0 && cellsReCollapsed < maxCells)
+            while (neighboringNodes.Count > 0)
             {
                 var node = neighboringNodes.Dequeue();
 
-                nodesToFix.Push(node);
-                nodesExplored.Add(node);
-                node.Content = Cell.Factory(_input.TileCount);
-                cellsReCollapsed++;
-
+                var didEncounterMaxCells = true;
                 foreach (var (neighbor, _) in node.Neighbors)
-                    if (!nodesExplored.Contains(neighbor)) // TODO required?
-                        neighboringNodes.Enqueue(neighbor);
+                {
+                    if (nodesExplored.Contains(neighbor))
+                        continue;
+
+                    neighbor.Content = Cell.Factory(_input.TileCount);
+                    nodesToFix.Add(neighbor);
+
+                    if (++cellsReCollapsed > maxCells)
+                    {
+                        didEncounterMaxCells = false;
+                        break;
+                    }
+
+                    neighboringNodes.Enqueue(neighbor);
+                }
+
+                if (!didEncounterMaxCells) break;
+
+                nodesToFix.Remove(node);
             }
 
             while (nodesToFix.Count > 0)
             {
-                var node = nodesToFix.Pop();
+                var node = nodesToFix.ElementAt(0);
+                nodesToFix.Remove(node);
                 var cell = node.Content;
 
                 if (cell.Count == 0)
@@ -78,9 +93,8 @@ namespace Algorithms.WaveFunctionCollapse
                     var constrainedCell = new HashSet<int>();
                     var oppositeDirection = _waveGraph.GetOppositeDirection(direction);
 
-                    if (!nodesExplored.Contains(neighborNode))
-                        foreach (var neighborTile in neighborNode.Content)
-                            constrainedCell.UnionWith(_input.TileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
+                    foreach (var neighborTile in neighborNode.Content)
+                        constrainedCell.UnionWith(_input.TileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
 
                     cell.IntersectWith(constrainedCell);
                 }

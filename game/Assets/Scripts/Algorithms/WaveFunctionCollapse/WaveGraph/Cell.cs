@@ -4,7 +4,7 @@ using Utility.Graph;
 
 namespace Algorithms.WaveFunctionCollapse.WaveGraph
 {
-    public class Cell : HashSet<int>, INodeCoordinates
+    public class Cell : HashSet<int>
     {
         public Cell(IEnumerable<int> collection) : base(collection) { }
 

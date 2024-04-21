@@ -4,26 +4,26 @@ using JetBrains.Annotations;
 
 namespace Utility.Graph
 {
-    public class Node<T>
+    public class Node<T1, T2> where T2 : INodeCoordinates
     {
-        [ItemCanBeNull] private readonly Node<T>[] _neighbors;
+        [ItemCanBeNull] private readonly Node<T1, T2>[] _neighbors;
 
-        public IEnumerable<(Node<T> neighbor, int direction)> Neighbors
+        public IEnumerable<(Node<T1, T2> neighbor, int direction)> Neighbors
             => _neighbors
                 .Select((n, i) => (neighbor: n, direction: i))
                 .Where(neighborDirection => neighborDirection.neighbor != null);
 
-        public T Content { get; set; }
-        public INodeCoordinates Coordinates { get; set; }
+        public T1 Content { get; set; }
+        public T2 Coordinates { get; private set; }
 
-        public Node(int cardinality, T content, INodeCoordinates coordinates)
+        public Node(int cardinality, T1 content, T2 coordinates)
         {
-            _neighbors = new Node<T>[cardinality];
+            _neighbors = new Node<T1, T2>[cardinality];
             Content = content;
             Coordinates = coordinates;
         }
 
-        public void RegisterNeighbor(Node<T> neighbor, int directionIndex)
+        public void RegisterNeighbor(Node<T1, T2> neighbor, int directionIndex)
         {
             _neighbors[directionIndex] = neighbor;
         }
