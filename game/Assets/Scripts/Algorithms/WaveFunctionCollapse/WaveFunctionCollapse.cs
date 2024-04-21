@@ -16,51 +16,37 @@ namespace Algorithms.WaveFunctionCollapse
 
             var startCellNode = new Node<Cell>(input.Cardinality, Cell.Factory((0, 0), input.TileCount));
 
-            // var nodesFrontier = new Queue<Cell>();
-            // var nodesKnown = new HashSet<Cell>();
-            //
-            // while (nodesFrontier.Count > 0)
-            // {
-            //     
-            // }
-            //
-            //
-            
-            RecursivelyAddNode(startCellNode);
+            var positionFrontier = new HashSet<(float x, float y)> { startCellNode.Content.Coordinates };
+            var nodesQueue = new Queue<Node<Cell>>();
+            nodesQueue.Enqueue(startCellNode);
 
-            return waveGraph;
 
-            // TODO go back to for loop
-            
-            void RecursivelyAddNode(Node<Cell> node)
+            while (nodesQueue.Count > 0)
             {
-                Debug.Log("--------------------------");
-                Debug.Log($"Adding {node.Content.Coordinates}");
+                var node = nodesQueue.Dequeue();
                 waveGraph.AddNode(node);
 
                 for (var directionIndex = 0; directionIndex < input.Cardinality; directionIndex++)
                 {
-                    Debug.Log($"Checking neighbor direction {directionIndex}");
-                    
                     if (!GetNeighborPosition(node.Content.Coordinates, directionIndex, out var neighborPosition))
                         continue;
 
-                    Debug.Log($"Found neighbor position {neighborPosition} at index {directionIndex}");
 
-                    var doesNodeExist = waveGraph.GetNode(neighborPosition.GetHashCode(), out var neighborNode);
-
-                    Debug.Log($"doesNodeExist {doesNodeExist}");
-                    
-                    if (!doesNodeExist)
+                    var isNodeInGraph = waveGraph.GetNode(neighborPosition.GetHashCode(), out var neighborNode);
+                    if (!isNodeInGraph)
                         neighborNode = new Node<Cell>(4, Cell.Factory(neighborPosition, input.TileCount));
 
                     node.RegisterNeighbor(neighborNode, directionIndex);
                     neighborNode.RegisterNeighbor(node, GetOppositeDirectionIndex(directionIndex));
 
-                    if (!doesNodeExist)
-                        RecursivelyAddNode(neighborNode);
+                    if (isNodeInGraph || !positionFrontier.Add(neighborPosition))
+                        continue;
+
+                    nodesQueue.Enqueue(neighborNode);
                 }
             }
+
+            return waveGraph;
 
             // TODO from input
             int GetOppositeDirectionIndex(int direction) => (direction + input.Cardinality / 2) % input.Cardinality;
