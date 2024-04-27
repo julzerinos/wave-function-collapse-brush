@@ -33,7 +33,10 @@ namespace Map
 
         public void RegeneratePatch()
         {
-            _computer.UnCollapseCells(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
+            // _computer.UnCollapseCells(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
+            // _computer.CompleteGrid();
+
+            _computer.Expand(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
             _computer.CompleteGrid();
 
             BuildMap();
@@ -43,13 +46,14 @@ namespace Map
         {
             _computer.Clear();
             _computer.CompleteGrid();
+            
             BuildMap();
         }
 
         private void BuildMap()
         {
             // TODO implement delta tiles replacement (instead of redoing the entire map)
-            
+
             foreach (Transform child in transform)
                 Destroy(child.gameObject);
 

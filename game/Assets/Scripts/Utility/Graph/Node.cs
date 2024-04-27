@@ -27,5 +27,11 @@ namespace Utility.Graph
         {
             _neighbors[directionIndex] = neighbor;
         }
+
+        public bool GetNeighborAtDirection(int direction, out Node<T1, T2> node)
+        {
+            node = _neighbors[direction];
+            return node is not null;
+        }
     }
 }

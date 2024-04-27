@@ -154,12 +154,13 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: Knots
   options:
+    defaultPatchCellCount: 50
     gridSize: 20
     tileOffset: 1
     seed: 20
     useRandomSeed: 0
-  patchCenter: {x: 12, y: 12}
-  patchCellCount: 65
+  patchCenter: {x: 4, y: 4}
+  patchCellCount: 100
   regenerateMap: 0
   regeneratePatch: 0
 --- !u!4 &198445468

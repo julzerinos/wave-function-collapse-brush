@@ -7,6 +7,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
     [Serializable]
     public class WaveFunctionCollapseOptions
     {
+        public int defaultPatchCellCount = 50;
         public int gridSize = 25;
         public float tileOffset = 1;
         [SerializeField] private int seed;

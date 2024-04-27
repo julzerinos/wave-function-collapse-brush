@@ -22,6 +22,7 @@ namespace Algorithms.WaveFunctionCollapse
             _options = options;
             _random = new Random(_options.Seed);
             _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(input, options);
+            WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), options.defaultPatchCellCount, _input.TileData);
         }
 
         public void CompleteGrid()
@@ -103,10 +104,15 @@ namespace Algorithms.WaveFunctionCollapse
             }
         }
 
+        public void Expand(CellCoordinates patchCenter, int cellCount)
+        {
+            WaveFunctionCollapse.AddCells(_waveGraph, patchCenter, cellCount, _input.TileData);
+        }
+
         public void Clear()
         {
-            // TODO update cardinality
             _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(_input, _options);
+            WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), _options.defaultPatchCellCount, _input.TileData);
             _random = new Random(_options.Seed);
         }
 
