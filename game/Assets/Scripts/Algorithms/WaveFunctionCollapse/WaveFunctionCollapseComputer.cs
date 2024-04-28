@@ -22,29 +22,29 @@ namespace Algorithms.WaveFunctionCollapse
             _options = options;
             _random = new Random(_options.Seed);
             _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(input, options);
-            WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), options.defaultPatchCellCount, _input.TileData);
+            // WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), options.defaultPatchCellCount, _input.TileData);
         }
 
-        public void CompleteGrid()
+        public IEnumerable<(TileData, CellCoordinates)> CompleteGrid()
         {
-            WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
-        }
-        
-        public void Expand(CellCoordinates patchCenter, int cellCount, bool overwrite = false)
-        {
-            WaveFunctionCollapse.AddCells(_waveGraph, patchCenter, cellCount, _input.TileData, overwrite);
+            return WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
         }
 
-        public void Clear()
+        public IEnumerable<(TileData, CellCoordinates)> Expand(CellCoordinates patchCenter, int cellCount, bool overwrite = false)
         {
-            _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(_input, _options);
-            WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), _options.defaultPatchCellCount, _input.TileData);
-            _random = new Random(_options.Seed);
+            return WaveFunctionCollapse.AddCells(_waveGraph, patchCenter, cellCount, _input.TileData, overwrite);
         }
+
+        // public void Clear()
+        // {
+        //     _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(_input, _options);
+        //     WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), _options.initialPatchCount, _input.TileData);
+        //     _random = new Random(_options.Seed);
+        // }
 
         public IEnumerable<(TileData, CellCoordinates)> ParseResult()
         {
-            return WaveFunctionCollapse.Parse(_waveGraph, _input);
+            return WaveFunctionCollapse.ParseAll(_waveGraph, _input);
         }
     }
 }

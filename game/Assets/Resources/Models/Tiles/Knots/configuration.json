@@ -1,5 +1,6 @@
 {
   "tiles": [
+    "cap",
     "corner",
     "cross",
     "empty",
@@ -8,6 +9,14 @@
   ],
   "types": {
     "array": [
+      {
+        "array": [
+          1,
+          0,
+          0,
+          0
+        ]
+      },
       {
         "array": [
           0,

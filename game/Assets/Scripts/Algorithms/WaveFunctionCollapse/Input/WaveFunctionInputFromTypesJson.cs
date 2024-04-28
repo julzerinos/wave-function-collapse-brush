@@ -13,6 +13,12 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public NestedArray<NestedArray<int>> types;
     }
 
+    /// <summary>
+    /// Configuration files has to have
+    /// 1. tiles    string of alphabetically ordered tile names
+    /// 2. types    array of array (per tile per direction) of type in each direction
+    ///             types must be in the same order as tiles
+    /// </summary>
     public class WaveFunctionInputFromTypesJson : IWaveFunctionInput
     {
         public int TileCount { get; }

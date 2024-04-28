@@ -1,8 +1,10 @@
+using System.Collections.Generic;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse;
 using Algorithms.WaveFunctionCollapse.Input;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
+using UnityEngine.Serialization;
 using Utility;
 
 
@@ -13,49 +15,57 @@ namespace Map
         [SerializeField] private string tileSetName;
         [SerializeField] private WaveFunctionCollapseOptions options;
 
-        [SerializeField] private Vector2Int patchCenter;
-        [SerializeField] private int patchCellCount = 50;
-        [SerializeField] private bool overwritePatch;
+        [SerializeField] private Transform brush;
 
         private WaveFunctionCollapseComputer _computer;
         private GameObject[] _tilePrefabs;
+        private readonly Dictionary<CellCoordinates, Tile> _instantiatedTilesLookup = new();
+
+        private Camera _camera;
+        private Vector2Int _lastHitPoint = new(0, 0);
 
         private void Awake()
         {
+            _camera = Camera.main;
+
             var tileSetPath = $"Models/Tiles/{tileSetName}";
             _tilePrefabs = Resources.LoadAll<GameObject>(tileSetPath);
 
             var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
             _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
-            _computer.CompleteGrid();
 
-            BuildMap();
+            BuildMap(_computer.Expand(new CellCoordinates(options.initialPatchLocation), options.initialPatchCount));
         }
 
-        public void RegeneratePatch()
+        private void Update()
         {
-            _computer.Expand(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount, overwritePatch);
-            _computer.CompleteGrid();
+            var ray = _camera.ScreenPointToRay(Input.mousePosition);
+            if (!Physics.Raycast(ray, out var hit))
+                return;
 
-            BuildMap();
+            brush.position = hit.point;
+
+            if (!Input.GetMouseButton(0)) return;
+
+            var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z));
+            if (hitPointFlat.Equals(_lastHitPoint))
+                return;
+
+            _lastHitPoint = hitPointFlat;
+            DrawPatch();
         }
 
-        public void RegenerateMap()
+        private void DrawPatch()
         {
-            _computer.Clear();
-            _computer.CompleteGrid();
-
-            BuildMap();
+            BuildMap(
+                _computer.Expand(new CellCoordinates(_lastHitPoint), options.patchCellCount, options.overwritePatch)
+            );
+            BuildMap(_computer.CompleteGrid());
         }
 
-        private void BuildMap()
+        private void BuildMap(IEnumerable<(TileData, CellCoordinates)> parsedCells)
         {
-            // TODO implement delta tiles replacement (instead of redoing the entire map)
-
-            foreach (Transform child in transform)
-                Destroy(child.gameObject);
-
-            foreach (var (tileData, cellCoordinates) in _computer.ParseResult())
+            foreach (var (tileData, cellCoordinates) in parsedCells)
             {
                 if (tileData == null)
                 {
@@ -70,32 +80,27 @@ namespace Map
                     continue;
                 }
 
-                var position = new Vector3(cellCoordinates.X, 0, cellCoordinates.Y) * options.tileOffset;
-
-                var tileGameObject = Instantiate(_tilePrefabs[tileData.OriginalIndex], transform, true);
-                tileGameObject.name = $"{tileGameObject.name.Replace("(Clone)", "")}.{tileData.Transformation} {position}";
-                tileGameObject.transform.position = position;
-
-                switch (tileData.Transformation)
+                if (!_instantiatedTilesLookup.TryGetValue(cellCoordinates, out var tile))
                 {
-                    case TileTransformation.Rotate90:
-                        tileGameObject.transform.Rotate(Vector3.up, 90);
-                        break;
-                    case TileTransformation.Rotate180:
-                        tileGameObject.transform.Rotate(Vector3.up, 180);
-                        break;
-                    case TileTransformation.Rotate270:
-                        tileGameObject.transform.Rotate(Vector3.up, 270);
-                        break;
-                    case TileTransformation.Original:
-                    default:
-                        break;
+                    var tileGameObject = new GameObject($"Tile {cellCoordinates}")
+                    {
+                        transform =
+                        {
+                            parent = transform,
+                            position = new Vector3(cellCoordinates.X, 0, cellCoordinates.Y) * options.tileOffset
+                        }
+                    };
+                    tile = tileGameObject.AddComponent<Tile>();
+                    foreach (var tilePrefab in _tilePrefabs)
+                        tile.AddTile(tilePrefab);
+                    _instantiatedTilesLookup[cellCoordinates] = tile;
                 }
+
+                if (tile.Transformation == tileData.Transformation && tile.ActiveTileIndex == tileData.OriginalIndex)
+                    continue;
+
+                tile.SetActiveTile(tileData);
             }
         }
-
-        [InspectorButton("RegenerateMap")] public bool regenerateMap;
-
-        [InspectorButton("RegeneratePatch")] public bool regeneratePatch;
     }
 }

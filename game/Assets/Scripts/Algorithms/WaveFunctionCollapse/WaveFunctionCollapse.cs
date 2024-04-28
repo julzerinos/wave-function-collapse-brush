@@ -26,7 +26,7 @@ namespace Algorithms.WaveFunctionCollapse
             return waveGraph;
         }
 
-        public static void AddCells(
+        public static IEnumerable<(TileData, CellCoordinates)> AddCells(
             Graph<Cell, CellCoordinates> waveGraph,
             CellCoordinates seedPosition,
             int cellCount,
@@ -85,14 +85,20 @@ namespace Algorithms.WaveFunctionCollapse
                                             (positionFrontier.Count < cellCount || !doesNodeExistAtPosition);
                     if (willVisitNeighbor)
                         nodesQueue.Enqueue(neighborNode);
-                    
+
                     if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
+                    {
                         MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
+                        if (neighborNode.Content.Count <= 1) yield return ParseCell(neighborNode, tileData);
+                    }
 
                     if (overwrite && willVisitNeighbor) continue;
 
                     if (doesNodeExistAtPosition && !neighborNode.Content.IsTotalSuperposition)
+                    {
                         MatchSelfToNeighbor(waveGraph, node, tileData, direction);
+                        if (node.Content.Count <= 1) yield return ParseCell(neighborNode, tileData);
+                    }
                 }
             }
         }
@@ -146,7 +152,7 @@ namespace Algorithms.WaveFunctionCollapse
             return !neighborCell.SetEquals(superposition);
         }
 
-        private static void Propagate(
+        private static IEnumerable<(TileData, CellCoordinates)> Propagate(
             IReadOnlyList<TileData> tileData,
             Node<Cell, CellCoordinates> seedNode
         )
@@ -182,6 +188,9 @@ namespace Algorithms.WaveFunctionCollapse
 
                     neighborNode.Content = new Cell(superposition, tileData.Count);
                     neighboringNodes.Push(neighborNode);
+
+                    if (superposition.Count <= 1)
+                        yield return ParseCell(neighborNode, tileData);
                 }
             }
         }
@@ -220,21 +229,20 @@ namespace Algorithms.WaveFunctionCollapse
             return cell.ElementAt(randIndex);
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> Parse(
+        public static IEnumerable<(TileData, CellCoordinates)> ParseAll(
             Graph<Cell, CellCoordinates> waveGrid,
             IWaveFunctionInput input
         )
         {
-            foreach (var node in waveGrid)
-            {
-                var cell = node.Content;
-                var tile = cell.Count == 1 ? input.TileData[cell.ElementAt(0)] : null;
-
-                yield return (tile, node.Coordinates);
-            }
+            return waveGrid.Select(node => ParseCell(node, input.TileData));
         }
 
-        public static void Execute(
+        private static (TileData, CellCoordinates) ParseCell(Node<Cell, CellCoordinates> node, IReadOnlyList<TileData> tileData)
+        {
+            return (node.Content.Count == 1 ? tileData[node.Content.ElementAt(0)] : null, node.Coordinates);
+        }
+
+        public static IEnumerable<(TileData, CellCoordinates)> Execute(
             Graph<Cell, CellCoordinates> waveGraph,
             Random random,
             IWaveFunctionInput input,
@@ -246,23 +254,25 @@ namespace Algorithms.WaveFunctionCollapse
             do
             {
                 Collapse(collapseNode.Content, random);
-                Propagate(input.TileData, collapseNode);
+                yield return ParseCell(collapseNode, input.TileData);
+
+                foreach (var parsedCell in Propagate(input.TileData, collapseNode))
+                    yield return parsedCell;
 
                 if (iterations++ <= 1000) continue;
-
                 Debug.LogWarning($"[WaveFunctionCollapse] WFC loop iterated the maximum number of iterations.");
                 break;
             } while (Observe(waveGraph, out collapseNode));
         }
 
-        public static void Execute(
+        public static IEnumerable<(TileData, CellCoordinates)> Execute(
             Graph<Cell, CellCoordinates> waveGraph,
             Random random,
             IWaveFunctionInput input
         )
         {
             var startCollapseNode = waveGraph.GetRandomNode();
-            Execute(waveGraph, random, input, startCollapseNode);
+            return Execute(waveGraph, random, input, startCollapseNode);
         }
 
         public static IEnumerable<(TileData, CellCoordinates)> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
@@ -280,7 +290,7 @@ namespace Algorithms.WaveFunctionCollapse
 
             Execute(waveGraph, random, input);
 
-            return Parse(waveGraph, input);
+            return ParseAll(waveGraph, input);
         }
     }
 }
