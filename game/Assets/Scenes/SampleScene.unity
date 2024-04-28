@@ -159,8 +159,9 @@ MonoBehaviour:
     tileOffset: 1
     seed: 20
     useRandomSeed: 0
-  patchCenter: {x: 4, y: 4}
-  patchCellCount: 100
+  patchCenter: {x: 0, y: 0}
+  patchCellCount: 50
+  overwritePatch: 1
   regenerateMap: 0
   regeneratePatch: 0
 --- !u!4 &198445468

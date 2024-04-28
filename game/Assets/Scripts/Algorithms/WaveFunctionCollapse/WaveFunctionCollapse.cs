@@ -47,11 +47,16 @@ namespace Algorithms.WaveFunctionCollapse
             while (nodesQueue.Count > 0)
             {
                 var node = nodesQueue.Dequeue();
-                // TODO
-                // if (overwrite)
-                //     node.Content = waveGraph.ContentFactory();
 
-                foreach (var (neighborOffset, direction) in waveGraph.NeighborOffsetsGenerator.Select((n, i) => (n, i)))
+                // TODO fix overwrite
+                if (overwrite)
+                    node.Content = waveGraph.ContentFactory();
+
+                foreach (
+                    var (neighborOffset, direction)
+                    in
+                    waveGraph.NeighborOffsetsGenerator.Select((n, i) => (n, i))
+                )
                 {
                     var neighborPosition = node.Coordinates + neighborOffset;
 
@@ -76,11 +81,15 @@ namespace Algorithms.WaveFunctionCollapse
                         neighborNode.RegisterNeighbor(node, waveGraph.GetOppositeDirection(direction));
                     }
 
-                    if (positionFrontier.Add(neighborPosition) && (positionFrontier.Count < cellCount || !doesNodeExistAtPosition))
+                    var willVisitNeighbor = positionFrontier.Add(neighborPosition) &&
+                                            (positionFrontier.Count < cellCount || !doesNodeExistAtPosition);
+                    if (willVisitNeighbor)
                         nodesQueue.Enqueue(neighborNode);
-
+                    
                     if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
                         MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
+
+                    if (overwrite && willVisitNeighbor) continue;
 
                     if (doesNodeExistAtPosition && !neighborNode.Content.IsTotalSuperposition)
                         MatchSelfToNeighbor(waveGraph, node, tileData, direction);
