@@ -45,7 +45,9 @@ namespace Algorithms.WaveFunctionCollapse
             var nodesQueue = new Queue<Node<Cell, CellCoordinates>>();
             nodesQueue.Enqueue(seedNode);
 
-            while (nodesQueue.Count > 0 && positionFrontier.Count < cellCount)
+            Node<Cell, CellCoordinates> latestKnownNode = null;
+
+            while (nodesQueue.Count > 0)
             {
                 var node = nodesQueue.Dequeue();
 
@@ -53,10 +55,13 @@ namespace Algorithms.WaveFunctionCollapse
                 {
                     var neighborPosition = node.Coordinates + neighborOffset;
 
-                    // TODO "ride" through known neighbors
-                    
-                    if (!waveGraph.GetNode(neighborPosition, out var neighborNode))
+                    var doesNodeKnowNeighbor = node.GetNeighborAtDirection(direction, out var neighborNode);
+                    var doesNodeExistAtPosition = waveGraph.GetNode(neighborPosition, out neighborNode);
+                    if (!doesNodeExistAtPosition)
                     {
+                        if (positionFrontier.Count >= cellCount)
+                            continue;
+
                         neighborNode = new Node<Cell, CellCoordinates>(
                             waveGraph.NodeCardinality,
                             waveGraph.ContentFactory(),
@@ -65,20 +70,34 @@ namespace Algorithms.WaveFunctionCollapse
                         waveGraph.AddNode(neighborNode);
                     }
 
-                    if (overrideCell)
-                        neighborNode.Content = waveGraph.ContentFactory();
-
-                    node.RegisterNeighbor(neighborNode, direction);
-                    neighborNode.RegisterNeighbor(node, waveGraph.GetOppositeDirection(direction));
-
-                    if (!node.Content.IsTotalSuperposition)
+                    if ((!doesNodeKnowNeighbor && doesNodeExistAtPosition) || !doesNodeExistAtPosition)
                     {
-                        // TODO inefficient? could do this afterwards in a fix nodes loop
-                        MatchSelf(waveGraph, neighborNode, tileData);
+                        node.RegisterNeighbor(neighborNode, direction);
+                        neighborNode.RegisterNeighbor(node, waveGraph.GetOppositeDirection(direction));
                     }
 
                     if (positionFrontier.Add(neighborPosition))
                         nodesQueue.Enqueue(neighborNode);
+
+                    if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
+                        MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
+
+                    if (doesNodeExistAtPosition && !neighborNode.Content.IsTotalSuperposition)
+                        MatchSelfToNeighbor(waveGraph, node, tileData, direction);
+
+
+                    // TODO
+                    // if (overrideCell)
+                    //     neighborNode.Content = waveGraph.ContentFactory();
+
+                    // if (!node.Content.IsTotalSuperposition)
+                    // {
+                    //     // TODO inefficient? could do this afterwards in a fix nodes loop
+                    //     MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
+                    // }
+
+                    //     if (!neighborNode.Content.IsTotalSuperposition)
+                    //         latestKnownNode = node;
                 }
             }
         }
@@ -95,22 +114,23 @@ namespace Algorithms.WaveFunctionCollapse
             cell.Add(tile);
         }
 
-        public static void MatchSelf(
+        public static void MatchSelfToNeighbor(
             Graph<Cell, CellCoordinates> waveGraph,
             Node<Cell, CellCoordinates> node,
-            TileData[] tileData
+            TileData[] tileData,
+            int direction
         )
         {
-            foreach (var (neighborNode, direction) in node.Neighbors)
-            {
-                var constrainedCell = new HashSet<int>();
-                var oppositeDirection = waveGraph.GetOppositeDirection(direction);
+            if (!node.GetNeighborAtDirection(direction, out var neighborNode))
+                return;
 
-                foreach (var neighborTile in neighborNode.Content)
-                    constrainedCell.UnionWith(tileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
+            var constrainedCell = new HashSet<int>();
+            var oppositeDirection = waveGraph.GetOppositeDirection(direction);
 
-                node.Content.IntersectWith(constrainedCell);
-            }
+            foreach (var neighborTile in neighborNode.Content)
+                constrainedCell.UnionWith(tileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
+
+            node.Content.IntersectWith(constrainedCell);
         }
 
         public static bool MatchNeighbor(
