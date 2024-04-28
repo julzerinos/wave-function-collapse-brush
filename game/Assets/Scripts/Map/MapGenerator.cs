@@ -15,6 +15,7 @@ namespace Map
 
         [SerializeField] private Vector2Int patchCenter;
         [SerializeField] private int patchCellCount = 50;
+        [SerializeField] private bool overwritePatch;
 
         private WaveFunctionCollapseComputer _computer;
         private GameObject[] _tilePrefabs;
@@ -33,10 +34,7 @@ namespace Map
 
         public void RegeneratePatch()
         {
-            // _computer.UnCollapseCells(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
-            // _computer.CompleteGrid();
-
-            _computer.Expand(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount);
+            _computer.Expand(new CellCoordinates(patchCenter.x, patchCenter.y), patchCellCount, overwritePatch);
             _computer.CompleteGrid();
 
             BuildMap();
@@ -46,7 +44,7 @@ namespace Map
         {
             _computer.Clear();
             _computer.CompleteGrid();
-            
+
             BuildMap();
         }
 

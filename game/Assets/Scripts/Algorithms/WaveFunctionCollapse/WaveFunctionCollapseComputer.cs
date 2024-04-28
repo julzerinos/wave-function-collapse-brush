@@ -29,84 +29,10 @@ namespace Algorithms.WaveFunctionCollapse
         {
             WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
         }
-
-        public void UnCollapseCells(CellCoordinates patchCenter, int maxCells)
+        
+        public void Expand(CellCoordinates patchCenter, int cellCount, bool overwrite = false)
         {
-            if (!_waveGraph.GetNode(patchCenter, out var startNode))
-            {
-                Debug.LogError($"[WFCComputer > UnCollapseCells] Could not find node for position {patchCenter}.");
-                return;
-            }
-
-            var neighboringNodes = new Queue<Node<Cell, CellCoordinates>>();
-            neighboringNodes.Enqueue(startNode);
-
-            var nodesToFix = new HashSet<Node<Cell, CellCoordinates>>();
-            var nodesExplored = new HashSet<Node<Cell, CellCoordinates>>();
-
-            startNode.Content = Cell.Factory(_input.TileCount);
-            nodesToFix.Add(startNode);
-            nodesExplored.Add(startNode);
-
-            var cellsReCollapsed = 0;
-            while (neighboringNodes.Count > 0)
-            {
-                var node = neighboringNodes.Dequeue();
-
-                var didEncounterMaxCells = true;
-                foreach (var (neighbor, _) in node.Neighbors)
-                {
-                    if (nodesExplored.Contains(neighbor))
-                        continue;
-
-                    neighbor.Content = Cell.Factory(_input.TileCount);
-                    nodesToFix.Add(neighbor);
-                    nodesExplored.Add(neighbor);
-
-                    if (++cellsReCollapsed > maxCells)
-                    {
-                        didEncounterMaxCells = false;
-                        break;
-                    }
-
-                    neighboringNodes.Enqueue(neighbor);
-                }
-
-                if (!didEncounterMaxCells) break;
-
-                nodesToFix.Remove(node);
-            }
-
-            while (nodesToFix.Count > 0)
-            {
-                var node = nodesToFix.ElementAt(0);
-                nodesToFix.Remove(node);
-                var cell = node.Content;
-
-                if (cell.Count == 0)
-                {
-                    Debug.LogWarning(
-                        "[WaveFunctionCollapse > Propagate] Wave collapse encountered failed superposition (skipping)."
-                    );
-                    continue;
-                }
-
-                foreach (var (neighborNode, direction) in node.Neighbors)
-                {
-                    var constrainedCell = new HashSet<int>();
-                    var oppositeDirection = _waveGraph.GetOppositeDirection(direction);
-
-                    foreach (var neighborTile in neighborNode.Content)
-                        constrainedCell.UnionWith(_input.TileData[neighborTile].ConnectionsPerDirection[oppositeDirection]);
-
-                    cell.IntersectWith(constrainedCell);
-                }
-            }
-        }
-
-        public void Expand(CellCoordinates patchCenter, int cellCount)
-        {
-            WaveFunctionCollapse.AddCells(_waveGraph, patchCenter, cellCount, _input.TileData);
+            WaveFunctionCollapse.AddCells(_waveGraph, patchCenter, cellCount, _input.TileData, overwrite);
         }
 
         public void Clear()

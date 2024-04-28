@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Algorithms.Tilesets;
@@ -32,7 +31,7 @@ namespace Algorithms.WaveFunctionCollapse
             CellCoordinates seedPosition,
             int cellCount,
             TileData[] tileData,
-            bool overrideCell = false
+            bool overwrite = false
         )
         {
             if (!waveGraph.GetNode(seedPosition, out var seedNode))
@@ -45,11 +44,12 @@ namespace Algorithms.WaveFunctionCollapse
             var nodesQueue = new Queue<Node<Cell, CellCoordinates>>();
             nodesQueue.Enqueue(seedNode);
 
-            Node<Cell, CellCoordinates> latestKnownNode = null;
-
             while (nodesQueue.Count > 0)
             {
                 var node = nodesQueue.Dequeue();
+                // TODO
+                // if (overwrite)
+                //     node.Content = waveGraph.ContentFactory();
 
                 foreach (var (neighborOffset, direction) in waveGraph.NeighborOffsetsGenerator.Select((n, i) => (n, i)))
                 {
@@ -76,7 +76,7 @@ namespace Algorithms.WaveFunctionCollapse
                         neighborNode.RegisterNeighbor(node, waveGraph.GetOppositeDirection(direction));
                     }
 
-                    if (positionFrontier.Add(neighborPosition))
+                    if (positionFrontier.Add(neighborPosition) && (positionFrontier.Count < cellCount || !doesNodeExistAtPosition))
                         nodesQueue.Enqueue(neighborNode);
 
                     if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
@@ -84,20 +84,6 @@ namespace Algorithms.WaveFunctionCollapse
 
                     if (doesNodeExistAtPosition && !neighborNode.Content.IsTotalSuperposition)
                         MatchSelfToNeighbor(waveGraph, node, tileData, direction);
-
-
-                    // TODO
-                    // if (overrideCell)
-                    //     neighborNode.Content = waveGraph.ContentFactory();
-
-                    // if (!node.Content.IsTotalSuperposition)
-                    // {
-                    //     // TODO inefficient? could do this afterwards in a fix nodes loop
-                    //     MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
-                    // }
-
-                    //     if (!neighborNode.Content.IsTotalSuperposition)
-                    //         latestKnownNode = node;
                 }
             }
         }
