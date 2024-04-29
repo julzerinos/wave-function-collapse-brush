@@ -16,6 +16,7 @@ namespace Map
         [SerializeField] private WaveFunctionCollapseOptions options;
 
         [SerializeField] private Transform brush;
+        [SerializeField] private GameObject invalidTile;
 
         private WaveFunctionCollapseComputer _computer;
         private GameObject[] _tilePrefabs;
@@ -34,7 +35,8 @@ namespace Map
             var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
             _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
 
-            BuildMap(_computer.Expand(new CellCoordinates(options.initialPatchLocation), options.initialPatchCount));
+            if (options.initialPatchCount > 0)
+                BuildMap(_computer.Expand(new CellCoordinates(options.initialPatchLocation), options.initialPatchCount));
         }
 
         private void Update()
@@ -67,19 +69,6 @@ namespace Map
         {
             foreach (var (tileData, cellCoordinates) in parsedCells)
             {
-                if (tileData == null)
-                {
-                    Debug.LogWarning($"[MapGenerator] No tile found for col-row position {cellCoordinates} (skipping).");
-                    continue;
-                }
-
-                if (tileData.OriginalIndex < 0 || tileData.OriginalIndex >= _tilePrefabs.Length)
-                {
-                    Debug.LogError(
-                        $"[MapGenerator] Could not find tile model for index {tileData.OriginalIndex} defined in configuration (skipping).");
-                    continue;
-                }
-
                 if (!_instantiatedTilesLookup.TryGetValue(cellCoordinates, out var tile))
                 {
                     var tileGameObject = new GameObject($"Tile {cellCoordinates}")
@@ -93,7 +82,23 @@ namespace Map
                     tile = tileGameObject.AddComponent<Tile>();
                     foreach (var tilePrefab in _tilePrefabs)
                         tile.AddTile(tilePrefab);
+                    tile.AddTile(invalidTile);
                     _instantiatedTilesLookup[cellCoordinates] = tile;
+                }
+
+                if (tileData == null)
+                {
+                    Debug.LogWarning($"[MapGenerator] No tile found for col-row position {cellCoordinates}.");
+                    tile.SetTileInvalid();
+                    continue;
+                }
+
+                if (tileData.OriginalIndex < 0 || tileData.OriginalIndex >= _tilePrefabs.Length)
+                {
+                    Debug.LogError(
+                        $"[MapGenerator] Could not find tile model for index {tileData.OriginalIndex} defined in configuration (skipping).");
+                    tile.SetTileInvalid();
+                    continue;
                 }
 
                 if (tile.Transformation == tileData.Transformation && tile.ActiveTileIndex == tileData.OriginalIndex)

@@ -52,5 +52,14 @@ namespace Map
             _possibleTiles[ActiveTileIndex].SetActive(false);
             ActiveTileIndex = -1;
         }
+
+        public void SetTileInvalid()
+        {
+            if (ActiveTileIndex > 0)
+                _possibleTiles[ActiveTileIndex].SetActive(false);
+            ActiveTileIndex = _possibleTiles.Count - 1;
+
+            _possibleTiles[^1].SetActive(true);
+        }
     }
 }

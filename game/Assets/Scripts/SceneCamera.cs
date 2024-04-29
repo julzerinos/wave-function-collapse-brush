@@ -4,15 +4,19 @@ using UnityEngine;
 public class SceneCamera : MonoBehaviour
 {
     private Vector3 _previousMousePosition;
+    private Camera _camera;
 
     private void Awake()
     {
         Cursor.visible = false;
+        _camera = GetComponent<Camera>();
     }
 
     private void Update()
     {
         var mousePosition = Input.mousePosition;
+
+        _camera.orthographicSize = Mathf.Clamp(_camera.orthographicSize - Input.mouseScrollDelta.y, 5, 30);
 
         if (!Input.GetMouseButton(1))
         {

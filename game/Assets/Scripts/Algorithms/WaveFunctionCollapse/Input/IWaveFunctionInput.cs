@@ -15,5 +15,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public CellCoordinates[] NeighborOffsets { get; }
 
         public int GetOppositeDirectionIndex(int direction);
+
+        public Dictionary<int, float> ProbabilityLookup { get; }
     }
 }

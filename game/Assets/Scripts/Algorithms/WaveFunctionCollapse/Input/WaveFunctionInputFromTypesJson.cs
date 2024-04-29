@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
@@ -11,6 +12,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
     {
         public string[] tiles;
         public NestedArray<NestedArray<int>> types;
+        public float[] probabilities;
     }
 
     /// <summary>
@@ -39,6 +41,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         };
 
         public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
+        public Dictionary<int, float> ProbabilityLookup { get; }
 
         public WaveFunctionInputFromTypesJson(string configurationJsonPath)
         {
@@ -54,7 +57,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
             var tilesWithTypedDirections = new int[tileSetJson.types.array.Length][];
             for (var tileIndex = 0; tileIndex < tileSetJson.types.array.Length; tileIndex++)
             {
-                var directionLookup = tilesWithTypedDirections[tileIndex] = new int[tileSetJson.types.array[tileIndex].array.Length];
+                tilesWithTypedDirections[tileIndex] = new int[tileSetJson.types.array[tileIndex].array.Length];
                 var directionArrays = tileSetJson.types.array[tileIndex].array;
 
                 tilesWithTypedDirections[tileIndex] = directionArrays;
@@ -62,6 +65,11 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections);
             TileCount = TileData.Length;
+
+            ProbabilityLookup = new Dictionary<int, float>();
+
+            for (var tileIndex = 0; tileIndex < TileData.Length; tileIndex++)
+                ProbabilityLookup.Add(tileIndex, tileSetJson.probabilities[TileData[tileIndex].OriginalIndex]);
         }
     }
 }

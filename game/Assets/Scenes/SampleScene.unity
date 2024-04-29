@@ -157,15 +157,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: Knots
   options:
-    defaultPatchCellCount: 50
+    initialPatchCount: 0
+    initialPatchLocation: {x: 0, y: 0}
     tileOffset: 1
     seed: 20
     useRandomSeed: 1
-    patchCellCount: 15
+    patchCellCount: 40
     overwritePatch: 0
   brush: {fileID: 795564970}
-  regenerateMap: 0
-  regeneratePatch: 0
+  invalidTile: {fileID: 1650010505555061636, guid: e35f8c7d228216041bf01feba73c6b76, type: 3}
 --- !u!64 &283335794
 MeshCollider:
   m_ObjectHideFlags: 0
@@ -506,7 +506,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9f08e2323174bb54693b32fc3793b9d6, type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 2.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9f08e2323174bb54693b32fc3793b9d6, type: 3}
       propertyPath: m_LocalPosition.y
@@ -514,7 +514,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9f08e2323174bb54693b32fc3793b9d6, type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -1.5
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 9f08e2323174bb54693b32fc3793b9d6, type: 3}
       propertyPath: m_LocalRotation.w

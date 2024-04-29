@@ -108,9 +108,9 @@ namespace Algorithms.WaveFunctionCollapse
             return FindLowestEntropyNode(waveGraph, out node);
         }
 
-        private static void Collapse(Cell cell, Random random)
+        private static void Collapse(Cell cell, Random random, Dictionary<int, float> probabilityLookup)
         {
-            var tile = PickTile(cell, random);
+            var tile = PickTile(cell, random, probabilityLookup);
             cell.Clear();
             cell.Add(tile);
         }
@@ -220,11 +220,17 @@ namespace Algorithms.WaveFunctionCollapse
             return minimumEntropy < int.MaxValue;
         }
 
-        private static int PickTile(Cell cell, Random random)
+        private static int PickTile(Cell cell, Random random, Dictionary<int, float> probabilityLookup)
         {
             if (cell.Count == 1) return cell.ElementAt(0);
 
-            // TODO add tile probability distribution
+            var randomEvent = random.NextDouble();
+            foreach (var tile in cell)
+            {
+                var probability = probabilityLookup[tile];
+                if ((randomEvent = randomEvent - probability) <= 0) return tile;
+            }
+
             var randIndex = random.Next(0, cell.Count);
             return cell.ElementAt(randIndex);
         }
@@ -253,7 +259,7 @@ namespace Algorithms.WaveFunctionCollapse
 
             do
             {
-                Collapse(collapseNode.Content, random);
+                Collapse(collapseNode.Content, random, input.ProbabilityLookup);
                 yield return ParseCell(collapseNode, input.TileData);
 
                 foreach (var parsedCell in Propagate(input.TileData, collapseNode))
