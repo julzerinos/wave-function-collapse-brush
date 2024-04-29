@@ -6,7 +6,12 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
 {
     public class Cell : HashSet<int>
     {
-        public Cell(IEnumerable<int> collection) : base(collection) { }
+        private int _maxTileCount;
+
+        public Cell(IEnumerable<int> collection, int maxTileCount) : base(collection)
+        {
+            _maxTileCount = maxTileCount;
+        }
 
         public override string ToString()
         {
@@ -14,6 +19,10 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
         }
 
         public static Cell Factory(int tileCount)
-            => new(Enumerable.Range(0, tileCount));
+            => new(Enumerable.Range(0, tileCount), tileCount);
+
+        public bool IsTotalSuperposition => Count == _maxTileCount;
+        public bool IsDetermined => Count == 1;
+        public bool IsFailed => Count == 0;
     }
 }

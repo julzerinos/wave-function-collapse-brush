@@ -1,13 +1,30 @@
 {
   "tiles": [
+    "cap",
     "corner",
     "cross",
     "empty",
     "line",
     "t"
   ],
+  "probabilities": [
+    0,
+    0.2,
+    0.2,
+    0.2,
+    0.2,
+    0.2
+  ],
   "types": {
     "array": [
+      {
+        "array": [
+          1,
+          0,
+          0,
+          0
+        ]
+      },
       {
         "array": [
           0,

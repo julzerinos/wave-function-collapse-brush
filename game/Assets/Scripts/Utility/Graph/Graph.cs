@@ -9,15 +9,26 @@ namespace Utility.Graph
         where T2 : INodeCoordinates
     {
         public Func<int, int> GetOppositeDirection { get; }
+        public int NodeCardinality { get; }
+
+        public Func<T1> ContentFactory { get; }
+        public IEnumerable<T2> NeighborOffsetsGenerator { get; }
 
         private readonly HashSet<Node<T1, T2>> _nodes = new();
         private readonly Dictionary<INodeCoordinates, Node<T1, T2>> _nodeByCoordinatesLookup = new();
 
-        private int _nodeCardinality;
 
-        public Graph(Func<int, int> oppositeDirectionCallable)
+        public Graph(
+            Func<int, int> oppositeDirectionCallable,
+            int nodeCardinality,
+            Func<T1> contentFactory,
+            IEnumerable<T2> neighborOffsetsGenerator
+        )
         {
             GetOppositeDirection = oppositeDirectionCallable;
+            NodeCardinality = nodeCardinality;
+            ContentFactory = contentFactory;
+            NeighborOffsetsGenerator = neighborOffsetsGenerator;
         }
 
         public void AddNode(Node<T1, T2> node)
@@ -26,9 +37,19 @@ namespace Utility.Graph
             _nodeByCoordinatesLookup.Add(node.Coordinates, node);
         }
 
-        public bool GetNode(INodeCoordinates coordinates, out Node<T1, T2> node)
+        public bool GetNode(T2 coordinates, out Node<T1, T2> node)
         {
             return _nodeByCoordinatesLookup.TryGetValue(coordinates, out node);
+        }
+
+        public bool Contains(Node<T1, T2> node)
+        {
+            return _nodes.Contains(node);
+        }
+        
+        public bool Contains(T2 coordinates)
+        {
+            return _nodeByCoordinatesLookup.ContainsKey(coordinates);
         }
 
         public Node<T1, T2> GetRandomNode()

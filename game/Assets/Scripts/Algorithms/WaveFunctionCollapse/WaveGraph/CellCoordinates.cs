@@ -1,4 +1,5 @@
 using System;
+using UnityEngine;
 using Utility.Graph;
 
 namespace Algorithms.WaveFunctionCollapse.WaveGraph
@@ -13,7 +14,11 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
             X = x;
             Y = y;
         }
-
+        public CellCoordinates(Vector2Int vec2i)
+        {
+            X = vec2i.x;
+            Y = vec2i.y;
+        }
         public static CellCoordinates operator +(CellCoordinates a, CellCoordinates b) =>
             new() { X = b.X + a.X, Y = b.Y + a.Y };
 
@@ -29,5 +34,7 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
         }
 
         public override string ToString() => $"cc({X}, {Y})";
+        
+        
     }
 }
