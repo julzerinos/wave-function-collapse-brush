@@ -1,0 +1,19 @@
+{
+  "tiles": [
+    "curve_rb"
+  ],
+  "probabilities": [
+    1
+  ],
+  "types": {
+    "array": [
+      {
+        "array": [
+          1,
+          1,
+          0
+        ]
+      }
+    ]
+  }
+}
