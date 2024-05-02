@@ -30,6 +30,7 @@ permutations_scale_noise = [np.random.uniform(0.1,1.1) for _ in range(len(permut
  
 number_of_tiles = 4
 
+#shouldn't that be for i in range(len(permutations)) instead? since we want to get all the combinations of 0,1?
 
 for i in numpy.random.choice(len(permutations), number_of_tiles, replace=False):
 

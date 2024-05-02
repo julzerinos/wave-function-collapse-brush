@@ -13,7 +13,7 @@ permutations_scale_noise = [np.random.uniform(0.1,1.1) for _ in range(len(permut
 
 number_of_tiles = 4
 
-for i in np.random.choice(len(permutations), number_of_tiles, replace=False):
+for i in range(len(permutations)):
     combination = 1000000
     for j, r in enumerate(permutations[i]):
         combination += int(r) * 10**j
