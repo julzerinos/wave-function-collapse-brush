@@ -159,10 +159,10 @@ MonoBehaviour:
   options:
     initialPatchCount: 0
     initialPatchLocation: {x: 0, y: 0}
-    tileOffset: 2
+    tileOffset: 1
     seed: 20
     useRandomSeed: 0
-    patchCellCount: 13
+    patchCellCount: 6
     overwritePatch: 0
   brush: {fileID: 795564970}
   invalidTile: {fileID: 1650010505555061636, guid: e35f8c7d228216041bf01feba73c6b76, type: 3}
