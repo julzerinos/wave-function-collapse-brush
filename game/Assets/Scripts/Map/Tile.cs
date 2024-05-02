@@ -30,19 +30,11 @@ namespace Map
                 ActiveTileIndex = data.OriginalIndex;
             }
 
-            if (data.Transformation != Transformation)
-            {
-                var y = data.Transformation switch
-                {
-                    TileTransformation.Original => 0,
-                    TileTransformation.Rotate90 => 90,
-                    TileTransformation.Rotate180 => 180,
-                    TileTransformation.Rotate270 => 270,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-                transform.rotation = Quaternion.Euler(0, y, 0);
-                Transformation = data.Transformation;
-            }
+            if (data.Transformation.DegreesRotation.Equals(Transformation.DegreesRotation))
+                return;
+
+            transform.rotation = Quaternion.Euler(0, data.Transformation.DegreesRotation, 0);
+            Transformation = data.Transformation;
         }
 
         public void SetTileInactive()

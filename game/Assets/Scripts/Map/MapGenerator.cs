@@ -23,7 +23,7 @@ namespace Map
         private readonly Dictionary<CellCoordinates, Tile> _instantiatedTilesLookup = new();
 
         private Camera _camera;
-        private Vector2Int _lastHitPoint = new(0, 0);
+        private Vector2 _lastHitPoint = new(0, 0);
 
         private void Awake()
         {
@@ -49,8 +49,8 @@ namespace Map
 
             if (!Input.GetMouseButton(0)) return;
 
-            var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z));
-            if (hitPointFlat.Equals(_lastHitPoint))
+            var hitPointFlat = new Vector2(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z));
+            if ((hitPointFlat - _lastHitPoint).sqrMagnitude < .25)
                 return;
 
             _lastHitPoint = hitPointFlat;
@@ -101,7 +101,8 @@ namespace Map
                     continue;
                 }
 
-                if (tile.Transformation == tileData.Transformation && tile.ActiveTileIndex == tileData.OriginalIndex)
+                if (tile.Transformation.DegreesRotation.Equals(tileData.Transformation.DegreesRotation) &&
+                    tile.ActiveTileIndex == tileData.OriginalIndex)
                     continue;
 
                 tile.SetActiveTile(tileData);

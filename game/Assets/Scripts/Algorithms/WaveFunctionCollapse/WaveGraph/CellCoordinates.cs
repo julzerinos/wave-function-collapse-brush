@@ -4,21 +4,24 @@ using Utility.Graph;
 
 namespace Algorithms.WaveFunctionCollapse.WaveGraph
 {
+    [Serializable]
     public struct CellCoordinates : INodeCoordinates
     {
-        public float X;
-        public float Y;
+        public int X;
+        public int Y;
 
-        public CellCoordinates(float x, float y)
+        public CellCoordinates(int x, int y)
         {
             X = x;
             Y = y;
         }
+
         public CellCoordinates(Vector2Int vec2i)
         {
             X = vec2i.x;
             Y = vec2i.y;
         }
+
         public static CellCoordinates operator +(CellCoordinates a, CellCoordinates b) =>
             new() { X = b.X + a.X, Y = b.Y + a.Y };
 
@@ -34,7 +37,5 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
         }
 
         public override string ToString() => $"cc({X}, {Y})";
-        
-        
     }
 }

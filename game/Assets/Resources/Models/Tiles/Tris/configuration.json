@@ -5,6 +5,11 @@
   "probabilities": [
     1
   ],
+  "offsets": [
+    {
+      "X": 
+    }
+  ],
   "types": {
     "array": [
       {
