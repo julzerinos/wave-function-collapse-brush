@@ -11,12 +11,12 @@ namespace Algorithms.WaveFunctionCollapse
 {
     public static class WaveFunctionCollapse
     {
-        public static Graph<Cell, CellCoordinates> InitializeWaveGraph(
+        public static Graph<Cell> InitializeWaveGraph(
             IWaveFunctionInput input,
             WaveFunctionCollapseOptions options
         )
         {
-            var waveGraph = new Graph<Cell, CellCoordinates>(
+            var waveGraph = new Graph<Cell>(
                 input.GetOppositeDirectionIndex,
                 input.Cardinality,
                 () => Cell.Factory(input.TileCount),
@@ -26,9 +26,9 @@ namespace Algorithms.WaveFunctionCollapse
             return waveGraph;
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> AddCells(
-            Graph<Cell, CellCoordinates> waveGraph,
-            CellCoordinates seedPosition,
+        public static IEnumerable<(TileData, INodeCoordinates)> AddCells(
+            Graph<Cell> waveGraph,
+            INodeCoordinates seedPosition,
             int cellCount,
             TileData[] tileData,
             bool overwrite = false
@@ -36,12 +36,12 @@ namespace Algorithms.WaveFunctionCollapse
         {
             if (!waveGraph.GetNode(seedPosition, out var seedNode))
             {
-                seedNode = new Node<Cell, CellCoordinates>(waveGraph.NodeCardinality, waveGraph.ContentFactory(), seedPosition);
+                seedNode = new Node<Cell>(waveGraph.NodeCardinality, waveGraph.ContentFactory(), seedPosition);
                 waveGraph.AddNode(seedNode);
             }
 
-            var positionFrontier = new HashSet<CellCoordinates> { seedNode.Coordinates };
-            var nodesQueue = new Queue<Node<Cell, CellCoordinates>>();
+            var positionFrontier = new HashSet<INodeCoordinates> { seedNode.Coordinates };
+            var nodesQueue = new Queue<Node<Cell>>();
             nodesQueue.Enqueue(seedNode);
 
             while (nodesQueue.Count > 0)
@@ -58,7 +58,7 @@ namespace Algorithms.WaveFunctionCollapse
                     waveGraph.NeighborOffsetsGenerator.Select((n, i) => (n, i))
                 )
                 {
-                    var neighborPosition = node.Coordinates + neighborOffset;
+                    var neighborPosition = node.Coordinates.Add(neighborOffset);
 
                     var doesNodeKnowNeighbor = node.GetNeighborAtDirection(direction, out var neighborNode);
                     var doesNodeExistAtPosition = waveGraph.GetNode(neighborPosition, out neighborNode);
@@ -67,7 +67,7 @@ namespace Algorithms.WaveFunctionCollapse
                         if (positionFrontier.Count >= cellCount)
                             continue;
 
-                        neighborNode = new Node<Cell, CellCoordinates>(
+                        neighborNode = new Node<Cell>(
                             waveGraph.NodeCardinality,
                             waveGraph.ContentFactory(),
                             neighborPosition
@@ -103,7 +103,7 @@ namespace Algorithms.WaveFunctionCollapse
             }
         }
 
-        private static bool Observe(Graph<Cell, CellCoordinates> waveGraph, out Node<Cell, CellCoordinates> node)
+        private static bool Observe(Graph<Cell> waveGraph, out Node<Cell> node)
         {
             return FindLowestEntropyNode(waveGraph, out node);
         }
@@ -116,8 +116,8 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         public static void MatchSelfToNeighbor(
-            Graph<Cell, CellCoordinates> waveGraph,
-            Node<Cell, CellCoordinates> node,
+            Graph<Cell> waveGraph,
+            Node<Cell> node,
             TileData[] tileData,
             int direction
         )
@@ -152,12 +152,12 @@ namespace Algorithms.WaveFunctionCollapse
             return !neighborCell.SetEquals(superposition);
         }
 
-        private static IEnumerable<(TileData, CellCoordinates)> Propagate(
+        private static IEnumerable<(TileData, INodeCoordinates)> Propagate(
             IReadOnlyList<TileData> tileData,
-            Node<Cell, CellCoordinates> seedNode
+            Node<Cell> seedNode
         )
         {
-            var neighboringNodes = new Stack<Node<Cell, CellCoordinates>>();
+            var neighboringNodes = new Stack<Node<Cell>>();
             neighboringNodes.Push(seedNode);
 
             while (neighboringNodes.Any())
@@ -196,8 +196,8 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         private static bool FindLowestEntropyNode(
-            Graph<Cell, CellCoordinates> waveGraph,
-            out Node<Cell, CellCoordinates> lowestEntropyNode
+            Graph<Cell> waveGraph,
+            out Node<Cell> lowestEntropyNode
         )
         {
             var minimumEntropy = int.MaxValue;
@@ -235,24 +235,24 @@ namespace Algorithms.WaveFunctionCollapse
             return cell.ElementAt(randIndex);
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> ParseAll(
-            Graph<Cell, CellCoordinates> waveGrid,
+        public static IEnumerable<(TileData, INodeCoordinates)> ParseAll(
+            Graph<Cell> waveGrid,
             IWaveFunctionInput input
         )
         {
             return waveGrid.Select(node => ParseCell(node, input.TileData));
         }
 
-        private static (TileData, CellCoordinates) ParseCell(Node<Cell, CellCoordinates> node, IReadOnlyList<TileData> tileData)
+        private static (TileData, INodeCoordinates) ParseCell(Node<Cell> node, IReadOnlyList<TileData> tileData)
         {
             return (node.Content.Count == 1 ? tileData[node.Content.ElementAt(0)] : null, node.Coordinates);
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> Execute(
-            Graph<Cell, CellCoordinates> waveGraph,
+        public static IEnumerable<(TileData, INodeCoordinates)> Execute(
+            Graph<Cell> waveGraph,
             Random random,
             IWaveFunctionInput input,
-            Node<Cell, CellCoordinates> collapseNode
+            Node<Cell> collapseNode
         )
         {
             var iterations = 0;
@@ -271,8 +271,8 @@ namespace Algorithms.WaveFunctionCollapse
             } while (Observe(waveGraph, out collapseNode));
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> Execute(
-            Graph<Cell, CellCoordinates> waveGraph,
+        public static IEnumerable<(TileData, INodeCoordinates)> Execute(
+            Graph<Cell> waveGraph,
             Random random,
             IWaveFunctionInput input
         )
@@ -281,15 +281,19 @@ namespace Algorithms.WaveFunctionCollapse
             return Execute(waveGraph, random, input, startCollapseNode);
         }
 
-        public static IEnumerable<(TileData, CellCoordinates)> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
+        public static IEnumerable<(TileData, INodeCoordinates)> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
         {
             var random = new Random(options.Seed);
 
             var waveGraph = InitializeWaveGraph(input, options);
 
+            var seedPosition = input.TileType == TileType.hex
+                ? (INodeCoordinates)new HexagonCellCoordinates(0, 0, 0)
+                : new SquareCellCoordinates(0, 0);
+
             AddCells(
                 waveGraph,
-                new CellCoordinates(0, 0),
+                seedPosition,
                 100,
                 input.TileData
             );

@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
+using Utility.Graph;
 using Utility.Serialize;
 
 namespace Algorithms.WaveFunctionCollapse.Input
@@ -13,7 +15,17 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public string[] tiles;
         public NestedArray<NestedArray<int>> types;
         public float[] probabilities;
-        public CellCoordinates[] offsets;
+        public CatchAllCellCoordinates[] offsets;
+    }
+
+    [Serializable]
+    public class CatchAllCellCoordinates
+    {
+        public int X = int.MinValue;
+        public int Y = int.MinValue;
+        public int Q = int.MinValue;
+        public int R = int.MinValue;
+        public int S = int.MinValue;
     }
 
     /// <summary>
@@ -28,21 +40,10 @@ namespace Algorithms.WaveFunctionCollapse.Input
     {
         public int TileCount { get; }
         public string[] Tiles { get; }
-
         public TileData[] TileData { get; }
-
-        // TODO never read from config json
         public int Cardinality { get; }
-
-        // TODO always assumes square tilesets
-        public CellCoordinates[] NeighborOffsets { get; }
-        // new[]
-        // {
-        //     new CellCoordinates(0f, 1f),
-        //     new CellCoordinates(1f, 0f),
-        //     new CellCoordinates(0f, -1f),
-        //     new CellCoordinates(-1f, 0f)
-        // };
+        public INodeCoordinates[] NeighborOffsets { get; }
+        public TileType TileType { get; }
 
         public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
         public Dictionary<int, float> ProbabilityLookup { get; }
@@ -67,7 +68,21 @@ namespace Algorithms.WaveFunctionCollapse.Input
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
 
-            NeighborOffsets = tileSetJson.offsets;
+            if (tileSetJson.offsets[0].X != int.MinValue)
+            {
+                NeighborOffsets = tileSetJson.offsets.Select(c => new SquareCellCoordinates(c.X, c.Y)).Cast<INodeCoordinates>().ToArray();
+                TileType = TileType.square;
+            }
+
+            if (tileSetJson.offsets[0].Q != int.MinValue)
+            {
+                NeighborOffsets = tileSetJson.offsets.Select(c => new HexagonCellCoordinates(c.Q, c.R, c.S)).Cast<INodeCoordinates>()
+                    .ToArray();
+                TileType = TileType.hex;
+            }
+
+            if (NeighborOffsets is null) throw new Exception("[WaveFunctionInputFromTypesJson] Did not populate neighbor offsets.");
+
             Cardinality = NeighborOffsets.Length;
 
             var transformations = new TileTransformation[Cardinality];

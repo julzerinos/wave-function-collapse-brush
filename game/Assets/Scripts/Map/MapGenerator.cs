@@ -6,6 +6,7 @@ using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 using UnityEngine.Serialization;
 using Utility;
+using Utility.Graph;
 
 
 namespace Map
@@ -20,10 +21,10 @@ namespace Map
 
         private WaveFunctionCollapseComputer _computer;
         private GameObject[] _tilePrefabs;
-        private readonly Dictionary<CellCoordinates, Tile> _instantiatedTilesLookup = new();
+        private readonly Dictionary<INodeCoordinates, Tile> _instantiatedTilesLookup = new();
 
         private Camera _camera;
-        private Vector2 _lastHitPoint = new(0, 0);
+        private Vector2Int _lastHitPoint = new(0, 0);
 
         private void Awake()
         {
@@ -35,8 +36,8 @@ namespace Map
             var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
             _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
 
-            if (options.initialPatchCount > 0)
-                BuildMap(_computer.Expand(new CellCoordinates(options.initialPatchLocation), options.initialPatchCount));
+            // if (options.initialPatchCount > 0)
+            //     BuildMap(_computer.Expand(new SquareCellCoordinates(options.initialPatchLocation), options.initialPatchCount));
         }
 
         private void Update()
@@ -49,8 +50,8 @@ namespace Map
 
             if (!Input.GetMouseButton(0)) return;
 
-            var hitPointFlat = new Vector2(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z));
-            if ((hitPointFlat - _lastHitPoint).sqrMagnitude < .25)
+            var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z)) / (int)options.tileOffset;
+            if (hitPointFlat.Equals(_lastHitPoint))
                 return;
 
             _lastHitPoint = hitPointFlat;
@@ -60,12 +61,12 @@ namespace Map
         private void DrawPatch()
         {
             BuildMap(
-                _computer.Expand(new CellCoordinates(_lastHitPoint), options.patchCellCount, options.overwritePatch)
+                _computer.Expand(_lastHitPoint, options.patchCellCount, options.overwritePatch)
             );
             BuildMap(_computer.CompleteGrid());
         }
 
-        private void BuildMap(IEnumerable<(TileData, CellCoordinates)> parsedCells)
+        private void BuildMap(IEnumerable<(TileData, INodeCoordinates)> parsedCells)
         {
             foreach (var (tileData, cellCoordinates) in parsedCells)
             {
@@ -76,7 +77,7 @@ namespace Map
                         transform =
                         {
                             parent = transform,
-                            position = new Vector3(cellCoordinates.X, 0, cellCoordinates.Y) * options.tileOffset
+                            position = cellCoordinates.ToPhysicalSpace * options.tileOffset
                         }
                     };
                     tile = tileGameObject.AddComponent<Tile>();
