@@ -8,46 +8,39 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
     [Serializable]
     public struct HexagonCellCoordinates : INodeCoordinates
     {
-        public int Q;
-        public int R;
-        public int S;
+        public int X;
+        public int Y;
 
-        public HexagonCellCoordinates(int q, int r, int s)
+
+        public HexagonCellCoordinates(int x, int y)
         {
-            Q = q;
-            R = r;
-            S = s;
+            X = x;
+            Y = y;
         }
 
         public HexagonCellCoordinates(Vector2Int vec2i)
         {
-            var q = vec2i.x;
-            var r = (vec2i.y - vec2i.x) / 2;
-
-            Q = Mathf.RoundToInt(q);
-            R = Mathf.RoundToInt(r);
-            S = Mathf.RoundToInt(-Q - R);
+            X = Mathf.RoundToInt(vec2i.x / 2f);
+            Y = vec2i.y;
         }
 
         public static HexagonCellCoordinates operator +(HexagonCellCoordinates a, HexagonCellCoordinates b) =>
-            new() { Q = b.Q + a.Q, R = b.R + a.R, };
+            new() { X = a.X + b.X, Y = a.Y + b.Y, };
 
         public override bool Equals(object obj) =>
             obj is HexagonCellCoordinates otherCoordinates
-            && Q.Equals(otherCoordinates.Q)
-            && R.Equals(otherCoordinates.R)
-            && S.Equals(otherCoordinates.S);
+            && X.Equals(otherCoordinates.X)
+            && Y.Equals(otherCoordinates.Y);
 
         public override int GetHashCode()
         {
             var hash = new HashCode();
-            hash.Add(Q);
-            hash.Add(R);
-            hash.Add(S);
+            hash.Add(X);
+            hash.Add(Y);
             return hash.ToHashCode();
         }
 
-        public override string ToString() => $"hex({Q}, {R}, {S})";
+        public override string ToString() => $"hex({X}, {Y})";
 
         private const float Horizontal = 3f / 2;
         private static float Vertical = Mathf.Sqrt(3) / 2;
@@ -56,8 +49,8 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
         {
             get
             {
-                var x = Q;
-                var z = 2 * (R + Q);
+                var x = X / 2;
+                var z = Y;
                 return new Vector3(x, 0, z);
             }
         }

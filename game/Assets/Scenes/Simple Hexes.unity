@@ -157,9 +157,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: KayKitHexagons
   options:
-    initialPatchCount: 0
+    initialPatchCount: 30
     initialPatchLocation: {x: 0, y: 0}
-    tileOffset: 2
+    tileOffset: 1.5
     seed: 20
     useRandomSeed: 0
     patchCellCount: 13

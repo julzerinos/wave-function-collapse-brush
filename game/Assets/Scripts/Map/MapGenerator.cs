@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse;
@@ -35,9 +36,16 @@ namespace Map
 
             var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
             _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
+        }
 
-            // if (options.initialPatchCount > 0)
-            //     BuildMap(_computer.Expand(new SquareCellCoordinates(options.initialPatchLocation), options.initialPatchCount));
+        private void Start()
+        {
+            BuildMap(
+                _computer.Expand(
+                    options.initialPatchLocation,
+                    options.initialPatchCount
+                )
+            );
         }
 
         private void Update()
@@ -50,7 +58,8 @@ namespace Map
 
             if (!Input.GetMouseButton(0)) return;
 
-            var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z)) / (int)options.tileOffset;
+            var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z)) /
+                               (int)options.tileOffset;
             if (hitPointFlat.Equals(_lastHitPoint))
                 return;
 

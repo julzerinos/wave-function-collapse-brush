@@ -88,7 +88,8 @@ namespace Algorithms.WaveFunctionCollapse
 
                     if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
                     {
-                        MatchSelfToNeighbor(waveGraph, neighborNode, tileData, waveGraph.GetOppositeDirection(direction));
+                        MatchSelfToNeighbor(waveGraph, neighborNode, tileData,
+                            waveGraph.GetOppositeDirection(direction));
                         if (neighborNode.Content.Count <= 1) yield return ParseCell(neighborNode, tileData);
                     }
 
@@ -281,14 +282,15 @@ namespace Algorithms.WaveFunctionCollapse
             return Execute(waveGraph, random, input, startCollapseNode);
         }
 
-        public static IEnumerable<(TileData, INodeCoordinates)> Generate(IWaveFunctionInput input, WaveFunctionCollapseOptions options)
+        public static IEnumerable<(TileData, INodeCoordinates)> Generate(IWaveFunctionInput input,
+            WaveFunctionCollapseOptions options)
         {
             var random = new Random(options.Seed);
 
             var waveGraph = InitializeWaveGraph(input, options);
 
             var seedPosition = input.TileType == TileType.hex
-                ? (INodeCoordinates)new HexagonCellCoordinates(0, 0, 0)
+                ? (INodeCoordinates)new HexagonCellCoordinates(0, 0)
                 : new SquareCellCoordinates(0, 0);
 
             AddCells(
