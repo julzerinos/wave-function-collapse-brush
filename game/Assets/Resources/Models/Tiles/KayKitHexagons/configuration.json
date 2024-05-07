@@ -15,7 +15,6 @@
     "hex_forest_roadL",
     "hex_forest_roadM",
     "hex_forest_waterA",
-    "hex_forest_waterB",
     "hex_forest_waterC",
     "hex_forest_waterD",
     "hex_water"
@@ -33,9 +32,8 @@
     0.052,
     0.052,
     0.052,
-    0.052,
-    0.052,
-    0.052,
+    0,
+    0,
     0.052,
     0.052,
     0.052,
@@ -217,16 +215,6 @@
           2,
           2,
           2
-        ]
-      },
-      {
-        "array": [
-          2,
-          2,
-          2,
-          0,
-          0,
-          0
         ]
       },
       {

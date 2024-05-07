@@ -36,6 +36,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
         public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
         public Dictionary<int, float> ProbabilityLookup { get; }
+        public float[] Rotations { get; }
 
         public WaveFunctionInputFromTypesJson(string configurationJsonPath)
         {
@@ -58,17 +59,19 @@ namespace Algorithms.WaveFunctionCollapse.Input
             NeighborOffsets = tileSetJson.offsets;
             Cardinality = NeighborOffsets.Length;
 
-            // var transformations = new TileTransformation[Cardinality];
-            // for (var i = 0; i < Cardinality; i++)
-            // {
-            //     transformations[i] = new TileTransformation
-            //     {
-            //         DegreesRotation = i * 360 / (float)Cardinality,
-            //         IndexOffset = i
-            //     };
-            // }
-            var transformations = new TileTransformation[1];
-            transformations[0] = new TileTransformation { DegreesRotation = 0, IndexOffset = 0 };
+            var transformations = new TileTransformation[Cardinality];
+            Rotations = new float[Cardinality];
+            for (var i = 0; i < Cardinality; i++)
+            {
+                var rotation = i * 360 / (float)Cardinality;
+
+                transformations[i] = new TileTransformation
+                {
+                    DegreesRotation = rotation,
+                    IndexOffset = i
+                };
+                Rotations[i] = rotation;
+            }
 
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections, transformations);
             TileCount = TileData.Length;

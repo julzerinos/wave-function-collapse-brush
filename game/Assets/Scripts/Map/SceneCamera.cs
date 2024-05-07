@@ -9,7 +9,6 @@ namespace Map
 
         private void Awake()
         {
-            Cursor.visible = false;
             _camera = GetComponent<Camera>();
         }
 

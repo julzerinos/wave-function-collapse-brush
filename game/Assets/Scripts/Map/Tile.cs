@@ -12,7 +12,14 @@ namespace Map
         private readonly List<GameObject> _possibleTiles = new();
 
         public int ActiveTileIndex { get; private set; } = -1;
-        public TileTransformation Transformation { get; private set; }
+
+        private float _currentRotation;
+        private float[] _rotations;
+
+        public void SetRotation(float[] rotations)
+        {
+            _rotations = rotations;
+        }
 
         public void AddTile(GameObject tile)
         {
@@ -23,23 +30,24 @@ namespace Map
 
         public void SetActiveTile(Cell cell)
         {
-            // TODO doesn't work for transformed tiles (with different index)
-            var index = cell.ElementAt(0);
+            var transformedIndex = cell.ElementAt(0);
 
-            if (index != ActiveTileIndex)
+            var trueIndex = transformedIndex / _rotations.Length;
+            if (trueIndex != ActiveTileIndex)
             {
                 if (ActiveTileIndex >= 0)
                     _possibleTiles[ActiveTileIndex].SetActive(false);
 
-                _possibleTiles[index].SetActive(true);
-                ActiveTileIndex = index;
+                _possibleTiles[trueIndex].SetActive(true);
+                ActiveTileIndex = trueIndex;
             }
 
-            // if (data.Transformation.DegreesRotation.Equals(Transformation.DegreesRotation))
-            //     return;
-            //
-            // transform.rotation = Quaternion.Euler(0, data.Transformation.DegreesRotation, 0);
-            // Transformation = data.Transformation;
+            var newRotation = _rotations[transformedIndex % _rotations.Length];
+            if (_currentRotation.Equals(newRotation))
+                return;
+
+            transform.rotation = Quaternion.Euler(0, newRotation, 0);
+            _currentRotation = newRotation;
         }
 
         public void SetTileInactive()

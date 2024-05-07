@@ -24,9 +24,13 @@ namespace Map
         private WaveFunctionCollapseComputer _computer;
         private GameObject[] _tilePrefabs;
         private readonly Dictionary<Cell, Tile> _instantiatedTilesLookup = new();
+        private readonly Dictionary<Collider, Cell> _cellByTileLookup = new();
+
+        private IWaveFunctionInput _input;
 
         private Camera _camera;
-        private Vector2Int _lastHitPoint = new(0, 0);
+        private Cell _lastHitCell = null;
+        private Vector3 _brushTarget;
 
         private void Awake()
         {
@@ -34,47 +38,49 @@ namespace Map
 
             var tileSetPath = $"Models/Tiles/{tileSetName}";
 
-            var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
-            _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
+            _input = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
+            _computer = new WaveFunctionCollapseComputer(_input, options);
 
             _tilePrefabs = Resources.LoadAll<GameObject>(tileSetPath)
-                .Where(r => waveFunctionInputFromJson.Tiles.Contains(r.name))
+                .Where(r => _input.Tiles.Contains(r.name))
                 .ToArray();
 
             BuildMap(
                 _computer.Expand(
-                    new Cell(waveFunctionInputFromJson.TileData.Length, new Vector2()),
+                    new Cell(_input.TileData.Length, new Vector2()),
                     options.initialPatchCount
                 )
             );
         }
 
-        // private void Update()
-        // {
-        //     var ray = _camera.ScreenPointToRay(Input.mousePosition);
-        //     if (!Physics.Raycast(ray, out var hit))
-        //         return;
-        //
-        //     brush.position = hit.point;
-        //
-        //     if (!Input.GetMouseButton(0)) return;
-        //
-        //     var hitPointFlat = new Vector2Int(Mathf.RoundToInt(hit.point.x), Mathf.RoundToInt(hit.point.z)) /
-        //                        (int)options.tileOffset;
-        //     if (hitPointFlat.Equals(_lastHitPoint))
-        //         return;
-        //
-        //     _lastHitPoint = hitPointFlat;
-        //     DrawPatch();
-        // }
-        //
-        // private void DrawPatch()
-        // {
-        //     BuildMap(
-        //         _computer.Expand(_lastHitPoint, options.patchCellCount, options.overwritePatch)
-        //     );
-        //     BuildMap(_computer.CompleteGrid());
-        // }
+        private void Update()
+        {
+            brush.position = Vector3.Lerp(brush.position, _brushTarget, .25f);
+
+            var ray = _camera.ScreenPointToRay(Input.mousePosition);
+            if (
+                Physics.Raycast(ray, out var hit)
+                && _cellByTileLookup.TryGetValue(hit.collider, out var cell)
+                && !cell.Equals(_lastHitCell)
+            )
+            {
+                _brushTarget = hit.transform.position;
+                _lastHitCell = cell;
+                return;
+            }
+
+            if (Input.GetMouseButton(0))
+                DrawPatch();
+        }
+
+        private void DrawPatch()
+        {
+            if (_lastHitCell is null) return;
+
+            BuildMap(
+                _computer.Expand(_lastHitCell, options.patchCellCount, options.overwritePatch)
+            );
+        }
 
         private void BuildMap(IEnumerable<Cell> parsedCells)
         {
@@ -90,10 +96,17 @@ namespace Map
                             position = new Vector3(cell.PhysicalPosition.x, 0, cell.PhysicalPosition.y) * options.tileOffset
                         }
                     };
+
+                    var tileCollider = tileGameObject.AddComponent<SphereCollider>();
+                    tileCollider.radius = options.tileOffset;
+                    _cellByTileLookup.Add(tileCollider, cell);
+
                     tile = tileGameObject.AddComponent<Tile>();
                     foreach (var tilePrefab in _tilePrefabs)
                         tile.AddTile(tilePrefab);
                     tile.AddTile(invalidTile);
+                    tile.SetRotation(_input.Rotations);
+
                     _instantiatedTilesLookup[cell] = tile;
                 }
 
@@ -103,18 +116,6 @@ namespace Map
                     tile.SetTileInvalid();
                     continue;
                 }
-
-                // if (tileData.OriginalIndex < 0 || tileData.OriginalIndex >= _tilePrefabs.Length)
-                // {
-                //     Debug.LogError(
-                //         $"[MapGenerator] Could not find tile model for index {tileData.OriginalIndex} defined in configuration (skipping).");
-                //     tile.SetTileInvalid();
-                //     continue;
-                // }
-                //
-                // if (tile.Transformation.DegreesRotation.Equals(tileData.Transformation.DegreesRotation) &&
-                //     tile.ActiveTileIndex == tileData.OriginalIndex)
-                //     continue;
 
                 tile.SetActiveTile(cell);
             }

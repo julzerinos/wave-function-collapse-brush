@@ -25,5 +25,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public int GetOppositeDirectionIndex(int direction);
 
         public Dictionary<int, float> ProbabilityLookup { get; }
+
+        public float[] Rotations { get; }
     }
 }

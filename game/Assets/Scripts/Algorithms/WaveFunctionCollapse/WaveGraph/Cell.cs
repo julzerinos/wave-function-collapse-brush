@@ -44,7 +44,7 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
 
         public bool Equals(Cell other)
         {
-            return other.GetHashCode().Equals(GetHashCode());
+            return other is not null && other.GetHashCode().Equals(GetHashCode());
         }
     }
 }

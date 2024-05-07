@@ -114,7 +114,8 @@ namespace Algorithms.WaveFunctionCollapse
         {
             var tile = PickTile(cell, random, probabilityLookup);
             cell.Clear();
-            cell.Add(tile);
+            if (cell.Count >= 0)
+                cell.Add(tile);
         }
 
         public static void MatchSelfToNeighbor(
@@ -225,6 +226,7 @@ namespace Algorithms.WaveFunctionCollapse
         private static int PickTile(Cell cell, Random random, Dictionary<int, float> probabilityLookup)
         {
             if (cell.Count == 1) return cell.ElementAt(0);
+            if (cell.Count == 0) return -1;
 
             var randomEvent = random.NextDouble();
             foreach (var tile in cell)
