@@ -51,7 +51,6 @@ namespace Algorithms.WaveFunctionCollapse.Input
             var tilesWithTypedDirections = new int[Tiles.Length][];
             for (var tileIndex = 0; tileIndex < Tiles.Length; tileIndex++)
             {
-                // tilesWithTypedDirections[tileIndex] = new int[tileSetJson.types.array[tileIndex].array.Length];
                 var directionArrays = tileSetJson.types.array[tileIndex].array;
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
