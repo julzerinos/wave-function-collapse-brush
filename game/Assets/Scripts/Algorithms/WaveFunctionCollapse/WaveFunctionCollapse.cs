@@ -47,10 +47,6 @@ namespace Algorithms.WaveFunctionCollapse
             {
                 var node = nodesQueue.Dequeue();
 
-                // TODO fix overwrite
-                // if (overwrite)
-                //     node.Content = waveGraph.ContentFactory();
-
                 foreach (var (offset, direction) in offsets.Select((o, i) => (o, i)))
                 {
                     var neighborPosition = node.Content.PhysicalPosition + offset;
@@ -92,17 +88,13 @@ namespace Algorithms.WaveFunctionCollapse
                         if (neighborNode.Content.Count <= 1) yield return neighborCell;
                     }
 
-                    // if (overwrite && willVisitNeighbor) continue;
-
-                    if (doesNodeExistForCell && !neighborNode.Content.IsTotalSuperposition)
+                    if (doesNodeExistForCell && !neighborNode.Content.IsTotalSuperposition && !neighborNode.Content.IsFailed)
                     {
                         MatchSelfToNeighbor(waveGraph, node, tileData, direction);
                         if (node.Content.Count <= 1) yield return node.Content;
                     }
                 }
             }
-
-            // TODO propagate should start from result of added cells
         }
 
         private static bool Observe(Graph<Cell> waveGraph, out Node<Cell> node)
@@ -180,6 +172,8 @@ namespace Algorithms.WaveFunctionCollapse
                 {
                     var neighborCell = neighborNode.Content;
 
+                    if (neighborCell.IsFailed) continue;
+
                     var isSuperpositionNew = MatchNeighbor(
                         neighborCell,
                         cell.Select(t => tileData[t].ConnectionsPerDirection[direction]),
@@ -231,8 +225,11 @@ namespace Algorithms.WaveFunctionCollapse
             var randomEvent = random.NextDouble();
             foreach (var tile in cell)
             {
-                var probability = probabilityLookup[tile];
-                if ((randomEvent = randomEvent - probability) <= 0) return tile;
+                if (!probabilityLookup.TryGetValue(tile, out var probability))
+                    continue;
+
+                probability /= cell.Count;
+                if ((randomEvent -= probability) <= 0) return tile;
             }
 
             var randIndex = random.Next(0, cell.Count);

@@ -78,7 +78,11 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
             ProbabilityLookup = new Dictionary<int, float>();
             for (var tileIndex = 0; tileIndex < TileData.Length; tileIndex++)
-                ProbabilityLookup.Add(tileIndex, tileSetJson.probabilities[TileData[tileIndex].OriginalIndex]);
+            {
+                var probability = tileSetJson.probabilities[TileData[tileIndex].OriginalIndex];
+                if (probability != 0)
+                    ProbabilityLookup.Add(tileIndex, tileSetJson.probabilities[TileData[tileIndex].OriginalIndex]);
+            }
         }
     }
 }

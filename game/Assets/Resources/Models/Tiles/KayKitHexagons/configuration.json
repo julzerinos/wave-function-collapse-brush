@@ -14,30 +14,32 @@
     "hex_forest_roadK",
     "hex_forest_roadL",
     "hex_forest_roadM",
-    "hex_forest_waterA",
-    "hex_forest_waterC",
-    "hex_forest_waterD",
+    "hex_sand_transitionA",
+    "hex_sand_waterA",
+    "hex_sand_waterC",
+    "hex_sand_waterD",
     "hex_water"
   ],
   "probabilities": [
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
-    0.052,
     0,
     0,
-    0.052,
-    0.052,
-    0.052,
-    0.052
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
   ],
   "offsets": [
     {
@@ -209,9 +211,19 @@
       },
       {
         "array": [
+          3,
+          3,
+          3,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "array": [
           2,
-          0,
-          0,
+          3,
+          3,
           2,
           2,
           2
@@ -222,19 +234,19 @@
           2,
           2,
           2,
-          0,
-          0,
-          0
+          3,
+          3,
+          3
         ]
       },
       {
         "array": [
-          0,
+          3,
           2,
           2,
-          0,
-          0,
-          0
+          3,
+          3,
+          3
         ]
       },
       {
