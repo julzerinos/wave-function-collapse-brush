@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Algorithms.Tilesets;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 
 namespace Map
@@ -19,22 +21,25 @@ namespace Map
             tileCopy.SetActive(false);
         }
 
-        public void SetActiveTile(TileData data)
+        public void SetActiveTile(Cell cell)
         {
-            if (data.OriginalIndex != ActiveTileIndex)
+            // TODO doesn't work for transformed tiles (with different index)
+            var index = cell.ElementAt(0);
+
+            if (index != ActiveTileIndex)
             {
                 if (ActiveTileIndex >= 0)
                     _possibleTiles[ActiveTileIndex].SetActive(false);
 
-                _possibleTiles[data.OriginalIndex].SetActive(true);
-                ActiveTileIndex = data.OriginalIndex;
+                _possibleTiles[index].SetActive(true);
+                ActiveTileIndex = index;
             }
 
-            if (data.Transformation.DegreesRotation.Equals(Transformation.DegreesRotation))
-                return;
-
-            transform.rotation = Quaternion.Euler(0, data.Transformation.DegreesRotation, 0);
-            Transformation = data.Transformation;
+            // if (data.Transformation.DegreesRotation.Equals(Transformation.DegreesRotation))
+            //     return;
+            //
+            // transform.rotation = Quaternion.Euler(0, data.Transformation.DegreesRotation, 0);
+            // Transformation = data.Transformation;
         }
 
         public void SetTileInactive()

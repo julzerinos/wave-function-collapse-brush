@@ -58,12 +58,15 @@ namespace Algorithms.Tilesets
                 var transformedTypes = new int[connectionTypes.Length];
 
                 if (transformation.DegreesRotation == 0f)
+                {
                     yield return new TileData
                     {
                         OriginalIndex = index,
                         Transformation = transformation,
                         TypesPerDirection = connectionTypes
                     };
+                    continue;
+                }
 
                 Array.Copy(
                     connectionTypes,

@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
+using UnityEngine;
 using Utility.Graph;
 
 namespace Algorithms.WaveFunctionCollapse.Input
@@ -19,9 +20,8 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
         public int Cardinality { get; }
 
-        public INodeCoordinates[] NeighborOffsets { get; }
+        public Vector2[] NeighborOffsets { get; }
 
-        public TileType TileType { get; }
         public int GetOppositeDirectionIndex(int direction);
 
         public Dictionary<int, float> ProbabilityLookup { get; }

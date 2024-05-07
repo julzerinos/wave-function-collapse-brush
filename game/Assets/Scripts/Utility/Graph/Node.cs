@@ -14,13 +14,11 @@ namespace Utility.Graph
                 .Where(neighborDirection => neighborDirection.neighbor != null);
 
         public T1 Content { get; set; }
-        public INodeCoordinates Coordinates { get; private set; }
 
-        public Node(int cardinality, T1 content, INodeCoordinates coordinates)
+        public Node(int cardinality, T1 content)
         {
             _neighbors = new Node<T1>[cardinality];
             Content = content;
-            Coordinates = coordinates;
         }
 
         public void RegisterNeighbor(Node<T1> neighbor, int directionIndex)

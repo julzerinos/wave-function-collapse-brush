@@ -13,17 +13,9 @@ namespace Algorithms.WaveFunctionCollapse.Input
     public class TileSetJson
     {
         public string[] tiles;
-        public NestedArray<NestedArray<int>> types;
         public float[] probabilities;
-        public CatchAllCellCoordinates[] offsets;
-        public string offsetType;
-    }
-
-    [Serializable]
-    public class CatchAllCellCoordinates
-    {
-        public int X = int.MinValue;
-        public int Y = int.MinValue;
+        public Vector2[] offsets;
+        public NestedArray<NestedArray<int>> types;
     }
 
     /// <summary>
@@ -32,7 +24,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
     /// 2. types    array of array (per tile per direction) of type in each direction
     ///             types must be in the same order as tiles
     /// 3. probab   array of probability for each tile
-    /// 4. offsets  offset cell coordinate to neighbor
+    /// 4. offsets  physical offset to edge connector point
     /// </summary>
     public class WaveFunctionInputFromTypesJson : IWaveFunctionInput
     {
@@ -40,9 +32,8 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
         public int Cardinality { get; }
-        public INodeCoordinates[] NeighborOffsets { get; }
-        public TileType TileType { get; }
-
+        public Vector2[] NeighborOffsets { get; }
+        
         public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
         public Dictionary<int, float> ProbabilityLookup { get; }
 
@@ -66,23 +57,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
 
-            switch (tileSetJson.offsetType)
-            {
-                case "hex":
-                    NeighborOffsets = tileSetJson.offsets.Select(c => new HexagonCellCoordinates(c.X, c.Y))
-                        .Cast<INodeCoordinates>()
-                        .ToArray();
-                    TileType = TileType.hex;
-                    break;
-                case "grid":
-                    NeighborOffsets = tileSetJson.offsets.Select(c => new SquareCellCoordinates(c.X, c.Y))
-                        .Cast<INodeCoordinates>().ToArray();
-                    TileType = TileType.square;
-                    break;
-            }
-
-            if (NeighborOffsets is null)
-                throw new Exception("[WaveFunctionInputFromTypesJson] Did not populate neighbor offsets.");
+            NeighborOffsets = tileSetJson.offsets;
 
             Cardinality = NeighborOffsets.Length;
 
@@ -102,9 +77,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections, transformations);
             TileCount = TileData.Length;
 
-
             ProbabilityLookup = new Dictionary<int, float>();
-
             for (var tileIndex = 0; tileIndex < TileData.Length; tileIndex++)
                 ProbabilityLookup.Add(tileIndex, tileSetJson.probabilities[TileData[tileIndex].OriginalIndex]);
         }

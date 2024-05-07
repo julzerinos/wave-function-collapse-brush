@@ -22,21 +22,22 @@ namespace Algorithms.WaveFunctionCollapse
             _options = options;
             _random = new Random(_options.Seed);
             _waveGraph = WaveFunctionCollapse.InitializeWaveGraph(input, options);
-            // WaveFunctionCollapse.AddCells(_waveGraph, new CellCoordinates(0, 0), options.defaultPatchCellCount, _input.TileData);
         }
 
-        public IEnumerable<(TileData, INodeCoordinates)> CompleteGrid()
+        public IEnumerable<Cell> CompleteGrid()
         {
             return WaveFunctionCollapse.Execute(_waveGraph, _random, _input);
         }
 
-        public IEnumerable<(TileData, INodeCoordinates)> Expand(Vector2Int patchCenter, int cellCount, bool overwrite = false)
+        public IEnumerable<Cell> Expand(Cell patchStartCell, int cellCount, bool overwrite = false)
         {
-            var seedPosition = _input.TileType == TileType.hex
-                ? (INodeCoordinates)new HexagonCellCoordinates(patchCenter)
-                : new SquareCellCoordinates(patchCenter);
+            foreach (var cell in WaveFunctionCollapse.AddCells(_waveGraph, patchStartCell, cellCount, _input.TileData,
+                         _input.NeighborOffsets, overwrite)) yield return cell;
 
-            return WaveFunctionCollapse.AddCells(_waveGraph, seedPosition, cellCount, _input.TileData, overwrite);
+            foreach (var cell in CompleteGrid())
+            {
+                yield return cell;
+            }
         }
 
         // public void Clear()
@@ -46,7 +47,7 @@ namespace Algorithms.WaveFunctionCollapse
         //     _random = new Random(_options.Seed);
         // }
 
-        public IEnumerable<(TileData, INodeCoordinates)> ParseResult()
+        public IEnumerable<Cell> ParseResult()
         {
             return WaveFunctionCollapse.ParseAll(_waveGraph, _input);
         }
