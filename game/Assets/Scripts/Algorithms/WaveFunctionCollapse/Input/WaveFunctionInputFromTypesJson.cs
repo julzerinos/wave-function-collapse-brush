@@ -16,6 +16,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public NestedArray<NestedArray<int>> types;
         public float[] probabilities;
         public CatchAllCellCoordinates[] offsets;
+        public string offsetType;
     }
 
     [Serializable]
@@ -23,9 +24,6 @@ namespace Algorithms.WaveFunctionCollapse.Input
     {
         public int X = int.MinValue;
         public int Y = int.MinValue;
-        public int Q = int.MinValue;
-        public int R = int.MinValue;
-        public int S = int.MinValue;
     }
 
     /// <summary>
@@ -68,32 +66,38 @@ namespace Algorithms.WaveFunctionCollapse.Input
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
 
-            if (tileSetJson.offsets[0].X != int.MinValue)
+            switch (tileSetJson.offsetType)
             {
-                NeighborOffsets = tileSetJson.offsets.Select(c => new SquareCellCoordinates(c.X, c.Y)).Cast<INodeCoordinates>().ToArray();
-                TileType = TileType.square;
+                case "hex":
+                    NeighborOffsets = tileSetJson.offsets.Select(c => new HexagonCellCoordinates(c.X, c.Y))
+                        .Cast<INodeCoordinates>()
+                        .ToArray();
+                    TileType = TileType.hex;
+                    break;
+                case "grid":
+                    NeighborOffsets = tileSetJson.offsets.Select(c => new SquareCellCoordinates(c.X, c.Y))
+                        .Cast<INodeCoordinates>().ToArray();
+                    TileType = TileType.square;
+                    break;
             }
 
-            if (tileSetJson.offsets[0].Q != int.MinValue)
-            {
-                NeighborOffsets = tileSetJson.offsets.Select(c => new HexagonCellCoordinates(c.Q, c.R, c.S)).Cast<INodeCoordinates>()
-                    .ToArray();
-                TileType = TileType.hex;
-            }
-
-            if (NeighborOffsets is null) throw new Exception("[WaveFunctionInputFromTypesJson] Did not populate neighbor offsets.");
+            if (NeighborOffsets is null)
+                throw new Exception("[WaveFunctionInputFromTypesJson] Did not populate neighbor offsets.");
 
             Cardinality = NeighborOffsets.Length;
 
-            var transformations = new TileTransformation[Cardinality];
-            for (var i = 0; i < Cardinality; i++)
-            {
-                transformations[i] = new TileTransformation
-                {
-                    DegreesRotation = i * 360 / (float)Cardinality,
-                    IndexOffset = i
-                };
-            }
+            // var transformations = new TileTransformation[Cardinality];
+            // for (var i = 0; i < Cardinality; i++)
+            // {
+            //     transformations[i] = new TileTransformation
+            //     {
+            //         DegreesRotation = i * 360 / (float)Cardinality,
+            //         IndexOffset = i
+            //     };
+            // }
+
+            var transformations = new TileTransformation[1];
+            transformations[0] = new TileTransformation { DegreesRotation = 0, IndexOffset = 0 };
 
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections, transformations);
             TileCount = TileData.Length;
