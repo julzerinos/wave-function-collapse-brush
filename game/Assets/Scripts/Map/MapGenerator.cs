@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse;
 using Algorithms.WaveFunctionCollapse.Input;
@@ -32,10 +33,13 @@ namespace Map
             _camera = Camera.main;
 
             var tileSetPath = $"Models/Tiles/{tileSetName}";
-            _tilePrefabs = Resources.LoadAll<GameObject>(tileSetPath);
 
             var waveFunctionInputFromJson = new WaveFunctionInputFromTypesJson($"{tileSetPath}/configuration");
             _computer = new WaveFunctionCollapseComputer(waveFunctionInputFromJson, options);
+
+            _tilePrefabs = Resources.LoadAll<GameObject>(tileSetPath)
+                .Where(r => waveFunctionInputFromJson.Tiles.Contains(r.name))
+                .ToArray();
 
             BuildMap(
                 _computer.Expand(

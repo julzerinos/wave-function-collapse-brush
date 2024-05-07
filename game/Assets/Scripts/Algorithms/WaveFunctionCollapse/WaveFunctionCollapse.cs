@@ -54,15 +54,15 @@ namespace Algorithms.WaveFunctionCollapse
                 foreach (var (offset, direction) in offsets.Select((o, i) => (o, i)))
                 {
                     var neighborPosition = node.Content.PhysicalPosition + offset;
-
                     var neighborCell = new Cell(tileData.Length, neighborPosition);
+
                     var doesNodeExistForCell = waveGraph.GetNode(neighborCell, out var neighborNode);
                     var doesNodeKnowNeighbor = node.GetNeighborAtDirection(direction, out _);
 
                     if (!doesNodeExistForCell)
                     {
                         if (cellsFrontier.Count >= cellCount)
-                            continue;
+                            continue; // TODO should be break?
 
                         neighborNode = new Node<Cell>(
                             waveGraph.NodeCardinality,
@@ -71,14 +71,17 @@ namespace Algorithms.WaveFunctionCollapse
                         waveGraph.AddNode(neighborNode);
                     }
 
-                    if ((!doesNodeKnowNeighbor && doesNodeExistForCell) || !doesNodeExistForCell)
+                    if (!doesNodeExistForCell || !doesNodeKnowNeighbor)
                     {
                         node.RegisterNeighbor(neighborNode, direction);
                         neighborNode.RegisterNeighbor(node, waveGraph.GetOppositeDirection(direction));
                     }
 
-                    var willVisitNeighbor = cellsFrontier.Add(neighborCell) &&
-                                            (cellsFrontier.Count < cellCount || !doesNodeExistForCell);
+                    var willVisitNeighbor = cellsFrontier.Add(neighborCell)
+                                            && (
+                                                cellsFrontier.Count < cellCount
+                                                || !doesNodeExistForCell
+                                            );
                     if (willVisitNeighbor)
                         nodesQueue.Enqueue(neighborNode);
 
@@ -99,7 +102,7 @@ namespace Algorithms.WaveFunctionCollapse
                 }
             }
 
-            // TODO propgate should start from result of added cells
+            // TODO propagate should start from result of added cells
         }
 
         private static bool Observe(Graph<Cell> waveGraph, out Node<Cell> node)

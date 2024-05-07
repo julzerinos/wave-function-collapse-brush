@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -23,19 +24,27 @@ namespace Algorithms.WaveFunctionCollapse.WaveGraph
         {
             return $"Cell of tiles {{ {string.Join(',', this)} }}.";
         }
-        
+
         public bool IsTotalSuperposition => Count == _maxTileCount;
         public bool IsDetermined => Count == 1;
         public bool IsFailed => Count == 0;
 
         public override int GetHashCode()
         {
-            return PhysicalPosition.GetHashCode();
+            var hashcode = new HashCode();
+            hashcode.Add(Mathf.Round(PhysicalPosition.x * 1000) / 1000);
+            hashcode.Add(Mathf.Round(PhysicalPosition.y * 1000) / 1000);
+            return hashcode.ToHashCode();
         }
 
         public override bool Equals(object obj)
         {
-            return obj is Cell cell && cell.PhysicalPosition.Equals(PhysicalPosition);
+            return obj is Cell cell && Equals(cell);
+        }
+
+        public bool Equals(Cell other)
+        {
+            return other.GetHashCode().Equals(GetHashCode());
         }
     }
 }

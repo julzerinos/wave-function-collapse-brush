@@ -33,7 +33,7 @@ namespace Algorithms.WaveFunctionCollapse.Input
         public TileData[] TileData { get; }
         public int Cardinality { get; }
         public Vector2[] NeighborOffsets { get; }
-        
+
         public int GetOppositeDirectionIndex(int direction) => (direction + Cardinality / 2) % Cardinality;
         public Dictionary<int, float> ProbabilityLookup { get; }
 
@@ -48,17 +48,15 @@ namespace Algorithms.WaveFunctionCollapse.Input
             TileCount = tileSetJson.tiles.Length;
             Tiles = tileSetJson.tiles;
 
-            var tilesWithTypedDirections = new int[tileSetJson.types.array.Length][];
-            for (var tileIndex = 0; tileIndex < tileSetJson.types.array.Length; tileIndex++)
+            var tilesWithTypedDirections = new int[Tiles.Length][];
+            for (var tileIndex = 0; tileIndex < Tiles.Length; tileIndex++)
             {
-                tilesWithTypedDirections[tileIndex] = new int[tileSetJson.types.array[tileIndex].array.Length];
+                // tilesWithTypedDirections[tileIndex] = new int[tileSetJson.types.array[tileIndex].array.Length];
                 var directionArrays = tileSetJson.types.array[tileIndex].array;
-
                 tilesWithTypedDirections[tileIndex] = directionArrays;
             }
 
             NeighborOffsets = tileSetJson.offsets;
-
             Cardinality = NeighborOffsets.Length;
 
             // var transformations = new TileTransformation[Cardinality];
@@ -70,7 +68,6 @@ namespace Algorithms.WaveFunctionCollapse.Input
             //         IndexOffset = i
             //     };
             // }
-
             var transformations = new TileTransformation[1];
             transformations[0] = new TileTransformation { DegreesRotation = 0, IndexOffset = 0 };
 

@@ -157,11 +157,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: KayKitHexagons
   options:
-    initialPatchCount: 25
+    initialPatchCount: 20
     initialPatchLocation: {x: 0, y: 0}
     tileOffset: 1.2
     seed: 20
-    useRandomSeed: 0
+    useRandomSeed: 1
     patchCellCount: 13
     overwritePatch: 0
   brush: {fileID: 795564970}
