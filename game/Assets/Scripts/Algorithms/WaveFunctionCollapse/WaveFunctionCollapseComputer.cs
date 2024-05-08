@@ -35,9 +35,12 @@ namespace Algorithms.WaveFunctionCollapse
                          _input.NeighborOffsets, overwrite)) yield return cell;
 
             foreach (var cell in CompleteGrid())
-            {
                 yield return cell;
-            }
+        }
+
+        public IEnumerable<Cell> ResetCells(Cell patchStartCell, int cellCount)
+        {
+            return WaveFunctionCollapse.ResetCells(_waveGraph, patchStartCell, cellCount, _input.TileData);
         }
 
         // public void Clear()

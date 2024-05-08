@@ -11,7 +11,7 @@ namespace Utility.Graph
         public IEnumerable<(Node<T1> neighbor, int direction)> Neighbors
             => _neighbors
                 .Select((n, i) => (neighbor: n, direction: i))
-                .Where(neighborDirection => neighborDirection.neighbor != null);
+                .Where(neighborDirection => neighborDirection.neighbor is not null);
 
         public T1 Content { get; set; }
 

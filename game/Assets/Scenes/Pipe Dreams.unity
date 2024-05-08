@@ -162,7 +162,7 @@ MonoBehaviour:
     tileOffset: 1
     seed: 20
     useRandomSeed: 1
-    patchCellCount: 30
+    patchCellCount: 40
     overwritePatch: 0
   brush: {fileID: 795564970}
   invalidTile: {fileID: 1650010505555061636, guid: e35f8c7d228216041bf01feba73c6b76, type: 3}

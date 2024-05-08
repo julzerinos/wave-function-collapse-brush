@@ -69,8 +69,16 @@ namespace Map
                 return;
             }
 
-            if (Input.GetMouseButton(0))
-                DrawPatch();
+            if (!Input.GetMouseButton(0))
+                return;
+
+            if (Input.GetKey(KeyCode.LeftControl))
+            {
+                ErasePatch();
+                return;
+            }
+
+            DrawPatch();
         }
 
         private void DrawPatch()
@@ -79,6 +87,15 @@ namespace Map
 
             BuildMap(
                 _computer.Expand(_lastHitCell, options.patchCellCount, options.overwritePatch)
+            );
+        }
+
+        private void ErasePatch()
+        {
+            if (_lastHitCell is null) return;
+
+            BuildMap(
+                _computer.ResetCells(_lastHitCell, options.patchCellCount)
             );
         }
 
@@ -117,7 +134,13 @@ namespace Map
                     continue;
                 }
 
-                tile.SetActiveTile(cell);
+                if (cell.IsDetermined)
+                {
+                    tile.SetActiveTile(cell);
+                    continue;
+                }
+
+                tile.SetTileInactive();
             }
         }
     }

@@ -83,16 +83,60 @@ namespace Algorithms.WaveFunctionCollapse
 
                     if (!node.Content.IsTotalSuperposition && neighborNode.Content.IsTotalSuperposition)
                     {
-                        MatchSelfToNeighbor(waveGraph, neighborNode, tileData,
+                        ConstrainSelfByNeighbor(waveGraph, neighborNode, tileData,
                             waveGraph.GetOppositeDirection(direction));
                         if (neighborNode.Content.Count <= 1) yield return neighborCell;
                     }
 
                     if (doesNodeExistForCell && !neighborNode.Content.IsTotalSuperposition && !neighborNode.Content.IsFailed)
                     {
-                        MatchSelfToNeighbor(waveGraph, node, tileData, direction);
+                        ConstrainSelfByNeighbor(waveGraph, node, tileData, direction);
                         if (node.Content.Count <= 1) yield return node.Content;
                     }
+                }
+            }
+        }
+
+        public static IEnumerable<Cell> ResetCells(
+            Graph<Cell> waveGraph,
+            Cell seedCell,
+            int cellCount,
+            TileData[] tileData
+        )
+        {
+            if (!waveGraph.GetNode(seedCell, out var seedNode))
+                yield break;
+
+            var cellsFrontier = new HashSet<Cell> { seedCell };
+            var nodesQueue = new Queue<Node<Cell>>();
+            nodesQueue.Enqueue(seedNode);
+
+            while (nodesQueue.Count > 0)
+            {
+                var node = nodesQueue.Dequeue();
+                node.Content = new Cell(tileData.Length, node.Content.PhysicalPosition);
+                yield return node.Content;
+
+                foreach (var (neighborNode, direction) in node.Neighbors)
+                {
+                    if (cellsFrontier.Count >= cellCount)
+                    {
+                        if (!neighborNode.Content.IsTotalSuperposition && !neighborNode.Content.IsFailed)
+                        {
+                            ConstrainSelfByNeighbor(
+                                waveGraph,
+                                node,
+                                tileData,
+                                direction
+                            );
+                            if (node.Content.Count <= 1) yield return node.Content;
+                        }
+
+                        continue;
+                    }
+
+                    nodesQueue.Enqueue(neighborNode);
+                    cellsFrontier.Add(neighborNode.Content);
                 }
             }
         }
@@ -110,7 +154,7 @@ namespace Algorithms.WaveFunctionCollapse
                 cell.Add(tile);
         }
 
-        public static void MatchSelfToNeighbor(
+        public static void ConstrainSelfByNeighbor(
             Graph<Cell> waveGraph,
             Node<Cell> node,
             TileData[] tileData,
@@ -129,7 +173,7 @@ namespace Algorithms.WaveFunctionCollapse
             node.Content.IntersectWith(constrainedCell);
         }
 
-        public static bool MatchNeighbor(
+        public static bool CheckNeighborSuperposition(
             Cell neighborCell,
             IEnumerable<HashSet<int>> possibleNeighborTiles,
             out HashSet<int> superposition
@@ -174,7 +218,7 @@ namespace Algorithms.WaveFunctionCollapse
 
                     if (neighborCell.IsFailed) continue;
 
-                    var isSuperpositionNew = MatchNeighbor(
+                    var isSuperpositionNew = CheckNeighborSuperposition(
                         neighborCell,
                         cell.Select(t => tileData[t].ConnectionsPerDirection[direction]),
                         out var superposition
