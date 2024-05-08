@@ -4,31 +4,29 @@ using JetBrains.Annotations;
 
 namespace Utility.Graph
 {
-    public class Node<T1, T2> where T2 : INodeCoordinates
+    public class Node<T1>
     {
-        [ItemCanBeNull] private readonly Node<T1, T2>[] _neighbors;
+        [ItemCanBeNull] private readonly Node<T1>[] _neighbors;
 
-        public IEnumerable<(Node<T1, T2> neighbor, int direction)> Neighbors
+        public IEnumerable<(Node<T1> neighbor, int direction)> Neighbors
             => _neighbors
                 .Select((n, i) => (neighbor: n, direction: i))
-                .Where(neighborDirection => neighborDirection.neighbor != null);
+                .Where(neighborDirection => neighborDirection.neighbor is not null);
 
         public T1 Content { get; set; }
-        public T2 Coordinates { get; private set; }
 
-        public Node(int cardinality, T1 content, T2 coordinates)
+        public Node(int cardinality, T1 content)
         {
-            _neighbors = new Node<T1, T2>[cardinality];
+            _neighbors = new Node<T1>[cardinality];
             Content = content;
-            Coordinates = coordinates;
         }
 
-        public void RegisterNeighbor(Node<T1, T2> neighbor, int directionIndex)
+        public void RegisterNeighbor(Node<T1> neighbor, int directionIndex)
         {
             _neighbors[directionIndex] = neighbor;
         }
 
-        public bool GetNeighborAtDirection(int direction, out Node<T1, T2> node)
+        public bool GetNeighborAtDirection(int direction, out Node<T1> node)
         {
             node = _neighbors[direction];
             return node is not null;

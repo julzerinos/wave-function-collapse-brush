@@ -1,0 +1,264 @@
+{
+  "tiles": [
+    "hex_forest",
+    "hex_forest_roadA",
+    "hex_forest_roadB",
+    "hex_forest_roadC",
+    "hex_forest_roadD",
+    "hex_forest_roadE",
+    "hex_forest_roadF",
+    "hex_forest_roadG",
+    "hex_forest_roadH",
+    "hex_forest_roadI",
+    "hex_forest_roadJ",
+    "hex_forest_roadK",
+    "hex_forest_roadL",
+    "hex_forest_roadM",
+    "hex_sand_transitionA",
+    "hex_sand_waterA",
+    "hex_sand_waterC",
+    "hex_sand_waterD",
+    "hex_water"
+  ],
+  "probabilities": [
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1
+  ],
+  "offsets": [
+    {
+      "x": 0.866,
+      "y": 1.5
+    },
+    {
+      "x": 1.732,
+      "y": 0
+    },
+    {
+      "x": 0.866,
+      "y": -1.5
+    },
+    {
+      "x": -0.866,
+      "y": -1.5
+    },
+    {
+      "x": -1.732,
+      "y": 0
+    },
+    {
+      "x": -0.866,
+      "y": 1.5
+    }
+  ],
+  "types": {
+    "array": [
+      {
+        "array": [
+          0,
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "array": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "array": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "array": [
+          0,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "array": [
+          0,
+          1,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          0,
+          1,
+          0,
+          1,
+          1,
+          0
+        ]
+      },
+      {
+        "array": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          0
+        ]
+      },
+      {
+        "array": [
+          1,
+          0,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          1,
+          0,
+          1,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          0,
+          1,
+          1,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          1,
+          1,
+          0,
+          0,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          1,
+          1,
+          1,
+          1,
+          0,
+          1
+        ]
+      },
+      {
+        "array": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ]
+      },
+      {
+        "array": [
+          3,
+          3,
+          3,
+          0,
+          0,
+          0
+        ]
+      },
+      {
+        "array": [
+          2,
+          3,
+          3,
+          2,
+          2,
+          2
+        ]
+      },
+      {
+        "array": [
+          2,
+          2,
+          2,
+          3,
+          3,
+          3
+        ]
+      },
+      {
+        "array": [
+          3,
+          2,
+          2,
+          3,
+          3,
+          3
+        ]
+      },
+      {
+        "array": [
+          2,
+          2,
+          2,
+          2,
+          2,
+          2
+        ]
+      }
+    ]
+  }
+}

@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Algorithms.Tilesets;
+using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 
 namespace Map
@@ -10,7 +12,14 @@ namespace Map
         private readonly List<GameObject> _possibleTiles = new();
 
         public int ActiveTileIndex { get; private set; } = -1;
-        public TileTransformation Transformation { get; private set; }
+
+        private float _currentRotation;
+        private float[] _rotations;
+
+        public void SetRotation(float[] rotations)
+        {
+            _rotations = rotations;
+        }
 
         public void AddTile(GameObject tile)
         {
@@ -19,30 +28,26 @@ namespace Map
             tileCopy.SetActive(false);
         }
 
-        public void SetActiveTile(TileData data)
+        public void SetActiveTile(Cell cell)
         {
-            if (data.OriginalIndex != ActiveTileIndex)
+            var transformedIndex = cell.ElementAt(0);
+
+            var trueIndex = transformedIndex / _rotations.Length;
+            if (trueIndex != ActiveTileIndex)
             {
                 if (ActiveTileIndex >= 0)
                     _possibleTiles[ActiveTileIndex].SetActive(false);
 
-                _possibleTiles[data.OriginalIndex].SetActive(true);
-                ActiveTileIndex = data.OriginalIndex;
+                _possibleTiles[trueIndex].SetActive(true);
+                ActiveTileIndex = trueIndex;
             }
 
-            if (data.Transformation != Transformation)
-            {
-                var y = data.Transformation switch
-                {
-                    TileTransformation.Original => 0,
-                    TileTransformation.Rotate90 => 90,
-                    TileTransformation.Rotate180 => 180,
-                    TileTransformation.Rotate270 => 270,
-                    _ => throw new ArgumentOutOfRangeException()
-                };
-                transform.rotation = Quaternion.Euler(0, y, 0);
-                Transformation = data.Transformation;
-            }
+            var newRotation = _rotations[transformedIndex % _rotations.Length];
+            if (_currentRotation.Equals(newRotation))
+                return;
+
+            transform.rotation = Quaternion.Euler(0, newRotation, 0);
+            _currentRotation = newRotation;
         }
 
         public void SetTileInactive()
