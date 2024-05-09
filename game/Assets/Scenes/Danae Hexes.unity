@@ -157,7 +157,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   tileSetName: HexagonWorld
   options:
-    initialPatchCount: 30
+    initialPatchCount: 1
     initialPatchLocation: {x: 0, y: 0}
     tileOffset: 5.7
     seed: 20
