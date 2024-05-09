@@ -1,14 +1,9 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse;
 using Algorithms.WaveFunctionCollapse.Input;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
-using UnityEngine.Serialization;
-using Utility;
-using Utility.Graph;
 
 
 namespace Map
@@ -29,7 +24,7 @@ namespace Map
         private IWaveFunctionInput _input;
 
         private Camera _camera;
-        private Cell _lastHitCell = null;
+        private Cell _lastHitCell;
         private Vector3 _brushTarget;
 
         private void Awake()
@@ -86,7 +81,7 @@ namespace Map
             if (_lastHitCell is null) return;
 
             BuildMap(
-                _computer.Expand(_lastHitCell, options.patchCellCount, options.overwritePatch)
+                _computer.Expand(_lastHitCell, options.patchCellCount)
             );
         }
 

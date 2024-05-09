@@ -1,7 +1,5 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using Algorithms.Tilesets;
 using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
 
@@ -11,7 +9,7 @@ namespace Map
     {
         private readonly List<GameObject> _possibleTiles = new();
 
-        public int ActiveTileIndex { get; private set; } = -1;
+        private int ActiveTileIndex { get; set; } = -1;
 
         private float _currentRotation;
         private float[] _rotations;

@@ -28,17 +28,7 @@ namespace Utility.Graph
             _nodes.Add(node);
             _nodeByContentLookup.Add(node.Content, node);
         }
-
-        public bool Contains(Node<T> node)
-        {
-            return _nodes.Contains(node);
-        }
-
-        public bool Contains(T content)
-        {
-            return _nodeByContentLookup.ContainsKey(content);
-        }
-
+        
         public bool GetNode(T content, out Node<T> node)
         {
             return _nodeByContentLookup.TryGetValue(content, out node);

@@ -1,10 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using Algorithms.Tilesets;
-using Algorithms.WaveFunctionCollapse.WaveGraph;
 using UnityEngine;
-using Utility.Graph;
 using Utility.Serialize;
 
 namespace Algorithms.WaveFunctionCollapse.Input
@@ -19,16 +16,15 @@ namespace Algorithms.WaveFunctionCollapse.Input
     }
 
     /// <summary>
-    /// Configuration files has to have
-    /// 1. tiles    string of alphabetically ordered tile names
-    /// 2. types    array of array (per tile per direction) of type in each direction
-    ///             types must be in the same order as tiles
-    /// 3. probab   array of probability for each tile
-    /// 4. offsets  physical offset to edge connector point
+    /// A configuration file has to have
+    /// 1. tiles            string of alphabetically ordered tile names
+    /// 2. types            array of array (per tile per direction) of type in each direction
+    ///                     types must be in the same order as tiles
+    /// 3. probabilities    array of probability for each tile
+    /// 4. offsets          physical offset to neighbor center
     /// </summary>
     public class WaveFunctionInputFromTypesJson : IWaveFunctionInput
     {
-        public int TileCount { get; }
         public string[] Tiles { get; }
         public TileData[] TileData { get; }
         public int Cardinality { get; }
@@ -46,7 +42,6 @@ namespace Algorithms.WaveFunctionCollapse.Input
 
             var tileSetJson = JsonUtility.FromJson<TileSetJson>(textAsset.text);
 
-            TileCount = tileSetJson.tiles.Length;
             Tiles = tileSetJson.tiles;
 
             var tilesWithTypedDirections = new int[Tiles.Length][];
@@ -74,7 +69,6 @@ namespace Algorithms.WaveFunctionCollapse.Input
             }
 
             TileData = ConnectionsFromTypesParser.Parse(tilesWithTypedDirections, transformations);
-            TileCount = TileData.Length;
 
             ProbabilityLookup = new Dictionary<int, float>();
             for (var tileIndex = 0; tileIndex < TileData.Length; tileIndex++)
