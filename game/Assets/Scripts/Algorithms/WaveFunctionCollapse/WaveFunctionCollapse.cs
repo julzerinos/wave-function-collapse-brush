@@ -12,8 +12,7 @@ namespace Algorithms.WaveFunctionCollapse
     public static class WaveFunctionCollapse
     {
         public static Graph<Cell> InitializeWaveGraph(
-            IWaveFunctionInput input,
-            WaveFunctionCollapseOptions options
+            IWaveFunctionInput input
         )
         {
             var waveGraph = new Graph<Cell>(
@@ -29,8 +28,7 @@ namespace Algorithms.WaveFunctionCollapse
             Cell seedCell,
             int cellCount,
             TileData[] tileData,
-            Vector2[] offsets,
-            bool overwrite = false
+            Vector2[] offsets
         )
         {
             if (!waveGraph.GetNode(seedCell, out var seedNode))
@@ -58,7 +56,7 @@ namespace Algorithms.WaveFunctionCollapse
                     if (!doesNodeExistForCell)
                     {
                         if (cellsFrontier.Count >= cellCount)
-                            continue; // TODO should be break?
+                            continue;
 
                         neighborNode = new Node<Cell>(
                             waveGraph.NodeCardinality,
@@ -154,7 +152,7 @@ namespace Algorithms.WaveFunctionCollapse
                 cell.Add(tile);
         }
 
-        public static void ConstrainSelfByNeighbor(
+        private static void ConstrainSelfByNeighbor(
             Graph<Cell> waveGraph,
             Node<Cell> node,
             TileData[] tileData,
@@ -173,7 +171,7 @@ namespace Algorithms.WaveFunctionCollapse
             node.Content.IntersectWith(constrainedCell);
         }
 
-        public static bool CheckNeighborSuperposition(
+        private static bool CheckNeighborSuperposition(
             Cell neighborCell,
             IEnumerable<HashSet<int>> possibleNeighborTiles,
             out HashSet<int> superposition
@@ -261,7 +259,7 @@ namespace Algorithms.WaveFunctionCollapse
             return minimumEntropy < int.MaxValue;
         }
 
-        private static int PickTile(Cell cell, Random random, Dictionary<int, float> probabilityLookup)
+        private static int PickTile(Cell cell, Random random, IReadOnlyDictionary<int, float> probabilityLookup)
         {
             if (cell.Count == 1) return cell.ElementAt(0);
             if (cell.Count == 0) return -1;
@@ -281,17 +279,11 @@ namespace Algorithms.WaveFunctionCollapse
         }
 
         public static IEnumerable<Cell> ParseAll(
-            Graph<Cell> waveGrid,
-            IWaveFunctionInput input
+            Graph<Cell> waveGrid
         )
         {
             return waveGrid.Select(node => node.Content);
         }
-
-        // private static Cell ParseCell(Node<Cell> node, IReadOnlyList<TileData> tileData)
-        // {
-        //     return (node.Content.Count == 1 ? tileData[node.Content.ElementAt(0)] : null, node.Coordinates);
-        // }
 
         public static IEnumerable<Cell> Execute(
             Graph<Cell> waveGraph,
@@ -332,9 +324,7 @@ namespace Algorithms.WaveFunctionCollapse
         )
         {
             var random = new Random(options.Seed);
-
-            var waveGraph = InitializeWaveGraph(input, options);
-
+            var waveGraph = InitializeWaveGraph(input);
             var seedCell = new Cell(input.TileData.Length, new Vector2());
 
             AddCells(
@@ -347,7 +337,7 @@ namespace Algorithms.WaveFunctionCollapse
 
             Execute(waveGraph, random, input);
 
-            return ParseAll(waveGraph, input);
+            return ParseAll(waveGraph);
         }
     }
 }

@@ -6,7 +6,6 @@ namespace Algorithms.Tilesets
     public class TileData
     {
         public int OriginalIndex;
-        public TileTransformation Transformation;
         public int[] TypesPerDirection;
         public HashSet<int>[] ConnectionsPerDirection;
     }
@@ -62,7 +61,6 @@ namespace Algorithms.Tilesets
                     yield return new TileData
                     {
                         OriginalIndex = index,
-                        Transformation = transformation,
                         TypesPerDirection = connectionTypes
                     };
                     continue;
@@ -86,7 +84,6 @@ namespace Algorithms.Tilesets
                 yield return new TileData
                 {
                     OriginalIndex = index,
-                    Transformation = transformation,
                     TypesPerDirection = transformedTypes
                 };
             }
